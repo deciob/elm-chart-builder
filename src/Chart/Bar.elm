@@ -1,8 +1,14 @@
 module Chart.Bar exposing (..)
 
 import Chart.Types exposing (..)
+import Html exposing (Html)
 
 
-render : DerivedConfig -> Html msg
-render derivedConfig =
-    Html.text <| derivedConfig.height
+render : Config -> Html msg
+render config =
+    Html.text <| config.height
+
+
+scaleTest : Config -> Config
+scaleTest config =
+    config

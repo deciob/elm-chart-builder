@@ -1,14 +1,16 @@
 module Chart.Types
     exposing
-        ( Data
-        , DerivedConfig
+        ( Config
+        , Data
         , PointLinear
         , PointOrdinal
         , PointTime
+        , fromConfig
         , fromData
         , fromPointLinear
         , fromPointOrdinal
         , fromPointTime
+        , toConfig
         , toData
         , toPointLinear
         , toPointOrdinal
@@ -22,50 +24,21 @@ import Visualization.Scale as Scale
         ( BandConfig
         , BandScale
         , ContinuousScale
+        , ContinuousTimeScale
         , defaultBandConfig
         )
-
-
-type PointTime
-    = PointTime ( Date, Float )
-
-
-toPointTime : ( Date, Float ) -> PointTime
-toPointTime point =
-    PointTime point
-
-
-fromPointTime : PointTime -> ( Date, Float )
-fromPointTime (PointTime point) =
-    point
-
-
-type PointOrdinal
-    = PointOrdinal ( String, Float )
-
-
-toPointOrdinal : ( String, Float ) -> PointOrdinal
-toPointOrdinal point =
-    PointOrdinal point
-
-
-fromPointOrdinal : PointOrdinal -> ( String, Float )
-fromPointOrdinal (PointOrdinal point) =
-    point
 
 
 type PointLinear
     = PointLinear ( Float, Float )
 
 
-toPointLinear : ( Float, Float ) -> PointLinear
-toPointLinear point =
-    PointLinear point
+type PointOrdinal
+    = PointOrdinal ( String, Float )
 
 
-fromPointLinear : PointLinear -> ( Float, Float )
-fromPointLinear (PointLinear point) =
-    point
+type PointTime
+    = PointTime ( Date, Float )
 
 
 type alias InternalData point =
@@ -79,6 +52,36 @@ type Data point
     = Data (InternalData point)
 
 
+toPointTime : ( Date, Float ) -> PointTime
+toPointTime point =
+    PointTime point
+
+
+fromPointTime : PointTime -> ( Date, Float )
+fromPointTime (PointTime point) =
+    point
+
+
+toPointOrdinal : ( String, Float ) -> PointOrdinal
+toPointOrdinal point =
+    PointOrdinal point
+
+
+fromPointOrdinal : PointOrdinal -> ( String, Float )
+fromPointOrdinal (PointOrdinal point) =
+    point
+
+
+toPointLinear : ( Float, Float ) -> PointLinear
+toPointLinear point =
+    PointLinear point
+
+
+fromPointLinear : PointLinear -> ( Float, Float )
+fromPointLinear (PointLinear point) =
+    point
+
+
 toData : InternalData point -> Data point
 toData data =
     Data data
@@ -89,12 +92,16 @@ fromData (Data point) =
     point
 
 
-type XScale
-    = Ordinal (BandScale String)
+type OrdinalScale
+    = OrdinalScale (BandScale String)
 
 
-type YScale
-    = Linear ContinuousScale
+type LinearScale
+    = LinearScale ContinuousScale
+
+
+type TimeScale
+    = TimeScale ContinuousTimeScale
 
 
 type alias Height =
@@ -113,20 +120,24 @@ type alias Padding =
     }
 
 
-type alias DerivedConfig =
+type alias InternalConfig =
     { height : Float
     , padding : Padding
     , width : Float
-    , xScale : XScale
-    , yScale : YScale
+    , xScale : OrdinalScale
+    , yScale : LinearScale
     }
 
 
-deriveHeight : Height -> DerivedConfig -> DerivedConfig
-deriveHeight height config =
-    { config | width = Maybe.withDefault config.height height }
+type Config
+    = Config InternalConfig
 
 
-deriveWidth : Width -> DerivedConfig -> DerivedConfig
-deriveWidth width config =
-    { config | height = Maybe.withDefault config.width width }
+toConfig : InternalConfig -> Config
+toConfig config =
+    Config config
+
+
+fromConfig : Config -> InternalConfig
+fromConfig (Config config) =
+    config
