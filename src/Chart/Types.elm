@@ -2,6 +2,7 @@ module Chart.Types
     exposing
         ( Config
         , Data
+        , Orientation
         , PointLinear
         , PointOrdinal
         , PointTime
@@ -10,6 +11,15 @@ module Chart.Types
         , fromPointLinear
         , fromPointOrdinal
         , fromPointTime
+        , setHeight
+        , setPadding
+        , setWidth
+        , setXScaleToLinear
+        , setXScaleToOrdinal
+        , setXScaleToTime
+        , setYScaleToLinear
+        , setYScaleToOrdinal
+        , setYScaleToTime
         , toConfig
         , toData
         , toPointLinear
@@ -27,6 +37,27 @@ import Visualization.Scale as Scale
         , ContinuousTimeScale
         , defaultBandConfig
         )
+
+
+type Scale
+    = Ordinal
+    | Linear
+    | Time
+
+
+type Orientation
+    = Vertical
+    | Horizontal
+
+
+
+-- TODO: What does this mean for the data structure
+-- And for the Line Chart?
+
+
+type Layout
+    = Stacked
+    | Grouped
 
 
 type PointLinear
@@ -124,8 +155,8 @@ type alias InternalConfig =
     { height : Float
     , padding : Padding
     , width : Float
-    , xScale : OrdinalScale
-    , yScale : LinearScale
+    , xScaleType : Scale
+    , yScaleType : Scale
     }
 
 
@@ -141,3 +172,84 @@ toConfig config =
 fromConfig : Config -> InternalConfig
 fromConfig (Config config) =
     config
+
+
+setHeight : Float -> Config -> Config
+setHeight height config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | height = height }
+
+
+setWidth : Float -> Config -> Config
+setWidth width config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | width = width }
+
+
+setPadding : Padding -> Config -> Config
+setPadding padding config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | padding = padding }
+
+
+setXScaleToLinear : Config -> Config
+setXScaleToLinear config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | xScaleType = Linear }
+
+
+setXScaleToOrdinal : Config -> Config
+setXScaleToOrdinal config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | xScaleType = Ordinal }
+
+
+setXScaleToTime : Config -> Config
+setXScaleToTime config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | xScaleType = Time }
+
+
+setYScaleToLinear : Config -> Config
+setYScaleToLinear config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | yScaleType = Linear }
+
+
+setYScaleToOrdinal : Config -> Config
+setYScaleToOrdinal config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | yScaleType = Ordinal }
+
+
+setYScaleToTime : Config -> Config
+setYScaleToTime config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | yScaleType = Time }
