@@ -2,24 +2,31 @@ module Chart.Types
     exposing
         ( Config
         , Data
+        , InternalConfig
+        , InternalData
+        , LinearDomain
+        , OrdinalDomain
         , Orientation
         , PointLinear
         , PointOrdinal
         , PointTime
+        , Range
+        , TimeDomain
+        , defaultConfig
         , fromConfig
         , fromData
         , fromPointLinear
         , fromPointOrdinal
         , fromPointTime
         , setHeight
+        , setHorizontalScaleToLinear
+        , setHorizontalScaleToOrdinal
+        , setHorizontalScaleToTime
         , setPadding
+        , setVerticalScaleToLinear
+        , setVerticalScaleToOrdinal
+        , setVerticalScaleToTime
         , setWidth
-        , setXScaleToLinear
-        , setXScaleToOrdinal
-        , setXScaleToTime
-        , setYScaleToLinear
-        , setYScaleToOrdinal
-        , setYScaleToTime
         , toConfig
         , toData
         , toPointLinear
@@ -50,11 +57,6 @@ type Orientation
     | Horizontal
 
 
-
--- TODO: What does this mean for the data structure
--- And for the Line Chart?
-
-
 type Layout
     = Stacked
     | Grouped
@@ -81,6 +83,22 @@ type alias InternalData point =
 
 type Data point
     = Data (InternalData point)
+
+
+type alias LinearDomain =
+    ( Float, Float )
+
+
+type alias OrdinalDomain =
+    List String
+
+
+type alias TimeDomain =
+    ( Date, Date )
+
+
+type alias Range =
+    ( Float, Float )
 
 
 toPointTime : ( Date, Float ) -> PointTime
@@ -151,12 +169,37 @@ type alias Padding =
     }
 
 
+type alias ConfigStructure =
+    { height : Maybe Float
+    , horizontalScaleType : Maybe Scale
+    , linearDomain : Maybe LinearDomain
+    , ordinalScaleConfig : Maybe BandConfig
+    , padding : Maybe Padding
+    , verticalScaleType : Maybe Scale
+    , width : Maybe Float
+    }
+
+
 type alias InternalConfig =
     { height : Float
+    , horizontalScaleType : Scale
+    , linearDomain : LinearDomain
+    , ordinalScaleConfig : BandConfig
     , padding : Padding
+    , verticalScaleType : Scale
     , width : Float
-    , xScaleType : Scale
-    , yScaleType : Scale
+    }
+
+
+defaultConfig : InternalConfig
+defaultConfig =
+    { height = 400
+    , horizontalScaleType = Ordinal
+    , linearDomain = ( 0, 0 )
+    , ordinalScaleConfig = defaultBandConfig
+    , padding = { top = 5, right = 5, bottom = 5, left = 5 }
+    , verticalScaleType = Linear
+    , width = 600
     }
 
 
@@ -172,6 +215,15 @@ toConfig config =
 fromConfig : Config -> InternalConfig
 fromConfig (Config config) =
     config
+
+
+setOrdinalScaleConfig : BandConfig -> Config -> Config
+setOrdinalScaleConfig bandConfig config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | ordinalScaleConfig = bandConfig }
 
 
 setHeight : Float -> Config -> Config
@@ -201,55 +253,55 @@ setPadding padding config =
     toConfig { internalConfig | padding = padding }
 
 
-setXScaleToLinear : Config -> Config
-setXScaleToLinear config =
+setHorizontalScaleToLinear : Config -> Config
+setHorizontalScaleToLinear config =
     let
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | xScaleType = Linear }
+    toConfig { internalConfig | horizontalScaleType = Linear }
 
 
-setXScaleToOrdinal : Config -> Config
-setXScaleToOrdinal config =
+setHorizontalScaleToOrdinal : Config -> Config
+setHorizontalScaleToOrdinal config =
     let
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | xScaleType = Ordinal }
+    toConfig { internalConfig | horizontalScaleType = Ordinal }
 
 
-setXScaleToTime : Config -> Config
-setXScaleToTime config =
+setHorizontalScaleToTime : Config -> Config
+setHorizontalScaleToTime config =
     let
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | xScaleType = Time }
+    toConfig { internalConfig | horizontalScaleType = Time }
 
 
-setYScaleToLinear : Config -> Config
-setYScaleToLinear config =
+setVerticalScaleToLinear : Config -> Config
+setVerticalScaleToLinear config =
     let
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | yScaleType = Linear }
+    toConfig { internalConfig | verticalScaleType = Linear }
 
 
-setYScaleToOrdinal : Config -> Config
-setYScaleToOrdinal config =
+setVerticalScaleToOrdinal : Config -> Config
+setVerticalScaleToOrdinal config =
     let
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | yScaleType = Ordinal }
+    toConfig { internalConfig | verticalScaleType = Ordinal }
 
 
-setYScaleToTime : Config -> Config
-setYScaleToTime config =
+setVerticalScaleToTime : Config -> Config
+setVerticalScaleToTime config =
     let
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | yScaleType = Time }
+    toConfig { internalConfig | verticalScaleType = Time }
