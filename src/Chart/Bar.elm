@@ -30,6 +30,17 @@ defaultConfig =
     }
 
 
+initConfig : Config
+initConfig =
+    toConfig
+        { height = Nothing
+        , linearDomain = Nothing
+        , bandScaleConfig = Nothing
+        , padding = Nothing
+        , width = Nothing
+        }
+
+
 render : Data -> Config -> Html msg
 render data_ config_ =
     let
