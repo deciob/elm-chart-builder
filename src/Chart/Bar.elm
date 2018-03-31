@@ -23,16 +23,14 @@ bandScale domain range =
 defaultConfig : InternalConfig
 defaultConfig =
     { height = 400
-    , horizontalScaleType = Band
     , linearDomain = ( 0, 0 )
     , bandScaleConfig = defaultBandConfig
     , padding = { top = 5, right = 5, bottom = 5, left = 5 }
-    , verticalScaleType = Linear
     , width = 600
     }
 
 
-render : List (Data a) -> Config -> Html msg
+render : Data -> Config -> Html msg
 render data_ config_ =
     let
         config : InternalConfig
@@ -40,9 +38,6 @@ render data_ config_ =
             fromConfig config_
                 |> (\config ->
                         { height = Maybe.withDefault defaultConfig.height config.height
-                        , horizontalScaleType =
-                            Maybe.withDefault defaultConfig.horizontalScaleType
-                                config.horizontalScaleType
                         , linearDomain =
                             Maybe.withDefault defaultConfig.linearDomain
                                 config.linearDomain
@@ -52,23 +47,31 @@ render data_ config_ =
                         , padding =
                             Maybe.withDefault defaultConfig.padding
                                 config.padding
-                        , verticalScaleType =
-                            Maybe.withDefault defaultConfig.verticalScaleType
-                                config.verticalScaleType
                         , width = Maybe.withDefault defaultConfig.width config.width
                         }
                    )
-    in
-    case config.horizontalScaleType of
-        Band ->
-            renderBand data_ config
 
-        _ ->
+        data =
+            fromData data_
+
+        pointStructure =
+            getDataPointStructure data
+    in
+    case pointStructure of
+        Nothing ->
             Html.text ""
 
+        Just point ->
+            case point of
+                PointBand point ->
+                    renderBand data config
 
-renderBand : List (Data PointBand) -> InternalConfig -> Html msg
-renderBand data_ config =
+                _ ->
+                    Html.text ""
+
+
+renderBand : List (List DataStructure) -> InternalConfig -> Html msg
+renderBand data config =
     Html.text ""
 
 

@@ -3,13 +3,11 @@ module Chart.Types
         ( BandDomain
         , Config
         , Data
+        , DataStructure
         , InternalConfig
-        , InternalData
         , LinearDomain
         , Orientation
-        , PointBand
-        , PointLinear
-        , PointTime
+        , Point(..)
         , Range
         , Scale(..)
         , TimeDomain
@@ -18,14 +16,9 @@ module Chart.Types
         , fromPointBand
         , fromPointLinear
         , fromPointTime
+        , getDataPointStructure
         , setHeight
-        , setHorizontalScaleToBand
-        , setHorizontalScaleToLinear
-        , setHorizontalScaleToTime
         , setPadding
-        , setVerticalScaleToBand
-        , setVerticalScaleToLinear
-        , setVerticalScaleToTime
         , setWidth
         , toConfig
         , toData
@@ -61,27 +54,30 @@ type Layout
     | Grouped
 
 
-type PointLinear
+getDataPointStructure : List (List DataStructure) -> Maybe Point
+getDataPointStructure data =
+    data
+        |> List.head
+        |> Maybe.withDefault []
+        |> List.head
+        |> Maybe.map .point
+
+
+type Point
     = PointLinear ( Float, Float )
+    | PointBand ( String, Float )
+    | PointTime ( Date, Float )
 
 
-type PointBand
-    = PointBand ( String, Float )
-
-
-type PointTime
-    = PointTime ( Date, Float )
-
-
-type alias InternalData point =
+type alias DataStructure =
     { cssClass : Maybe String
-    , point : point
+    , point : Point
     , title : Maybe String
     }
 
 
-type Data point
-    = Data (InternalData point)
+type Data
+    = Data (List (List DataStructure))
 
 
 type alias LinearDomain =
@@ -100,44 +96,59 @@ type alias Range =
     ( Float, Float )
 
 
-toPointTime : ( Date, Float ) -> PointTime
-toPointTime point =
-    PointTime point
-
-
-fromPointTime : PointTime -> ( Date, Float )
-fromPointTime (PointTime point) =
-    point
-
-
-toPointBand : ( String, Float ) -> PointBand
-toPointBand point =
-    PointBand point
-
-
-fromPointBand : PointBand -> ( String, Float )
-fromPointBand (PointBand point) =
-    point
-
-
-toPointLinear : ( Float, Float ) -> PointLinear
-toPointLinear point =
-    PointLinear point
-
-
-fromPointLinear : PointLinear -> ( Float, Float )
-fromPointLinear (PointLinear point) =
-    point
-
-
-toData : InternalData point -> Data point
+toData : List (List DataStructure) -> Data
 toData data =
     Data data
 
 
-fromData : Data point -> InternalData point
-fromData (Data point) =
-    point
+fromData : Data -> List (List DataStructure)
+fromData (Data data) =
+    data
+
+
+toPointTime : ( Date, Float ) -> Point
+toPointTime point =
+    PointTime point
+
+
+fromPointTime : Point -> Maybe ( Date, Float )
+fromPointTime point =
+    case point of
+        PointTime data ->
+            Just data
+
+        _ ->
+            Nothing
+
+
+toPointBand : ( String, Float ) -> Point
+toPointBand point =
+    PointBand point
+
+
+fromPointBand : Point -> Maybe ( String, Float )
+fromPointBand point =
+    case point of
+        PointBand data ->
+            Just data
+
+        _ ->
+            Nothing
+
+
+toPointLinear : ( Float, Float ) -> Point
+toPointLinear point =
+    PointLinear point
+
+
+fromPointLinear : Point -> Maybe ( Float, Float )
+fromPointLinear point =
+    case point of
+        PointLinear data ->
+            Just data
+
+        _ ->
+            Nothing
 
 
 type BandScale
@@ -170,22 +181,18 @@ type alias Padding =
 
 type alias ConfigStructure =
     { height : Maybe Float
-    , horizontalScaleType : Maybe Scale
     , linearDomain : Maybe LinearDomain
     , bandScaleConfig : Maybe BandConfig
     , padding : Maybe Padding
-    , verticalScaleType : Maybe Scale
     , width : Maybe Float
     }
 
 
 type alias InternalConfig =
     { height : Float
-    , horizontalScaleType : Scale
     , linearDomain : LinearDomain
     , bandScaleConfig : BandConfig
     , padding : Padding
-    , verticalScaleType : Scale
     , width : Float
     }
 
@@ -238,57 +245,3 @@ setPadding padding config =
             fromConfig config
     in
     toConfig { internalConfig | padding = Just padding }
-
-
-setHorizontalScaleToLinear : Config -> Config
-setHorizontalScaleToLinear config =
-    let
-        internalConfig =
-            fromConfig config
-    in
-    toConfig { internalConfig | horizontalScaleType = Just Linear }
-
-
-setHorizontalScaleToBand : Config -> Config
-setHorizontalScaleToBand config =
-    let
-        internalConfig =
-            fromConfig config
-    in
-    toConfig { internalConfig | horizontalScaleType = Just Band }
-
-
-setHorizontalScaleToTime : Config -> Config
-setHorizontalScaleToTime config =
-    let
-        internalConfig =
-            fromConfig config
-    in
-    toConfig { internalConfig | horizontalScaleType = Just Time }
-
-
-setVerticalScaleToLinear : Config -> Config
-setVerticalScaleToLinear config =
-    let
-        internalConfig =
-            fromConfig config
-    in
-    toConfig { internalConfig | verticalScaleType = Just Linear }
-
-
-setVerticalScaleToBand : Config -> Config
-setVerticalScaleToBand config =
-    let
-        internalConfig =
-            fromConfig config
-    in
-    toConfig { internalConfig | verticalScaleType = Just Band }
-
-
-setVerticalScaleToTime : Config -> Config
-setVerticalScaleToTime config =
-    let
-        internalConfig =
-            fromConfig config
-    in
-    toConfig { internalConfig | verticalScaleType = Just Time }

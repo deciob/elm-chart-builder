@@ -4,3 +4,5 @@ elm-stuff
 repl-temp-*
 # js compiled
 elm.js
+# vim swap files
+*.swp
