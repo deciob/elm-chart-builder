@@ -1,36 +1,36 @@
 module Chart.Types
     exposing
-        ( Config
+        ( BandDomain
+        , Config
         , Data
         , InternalConfig
         , InternalData
         , LinearDomain
-        , OrdinalDomain
         , Orientation
+        , PointBand
         , PointLinear
-        , PointOrdinal
         , PointTime
         , Range
+        , Scale(..)
         , TimeDomain
-        , defaultConfig
         , fromConfig
         , fromData
+        , fromPointBand
         , fromPointLinear
-        , fromPointOrdinal
         , fromPointTime
         , setHeight
+        , setHorizontalScaleToBand
         , setHorizontalScaleToLinear
-        , setHorizontalScaleToOrdinal
         , setHorizontalScaleToTime
         , setPadding
+        , setVerticalScaleToBand
         , setVerticalScaleToLinear
-        , setVerticalScaleToOrdinal
         , setVerticalScaleToTime
         , setWidth
         , toConfig
         , toData
+        , toPointBand
         , toPointLinear
-        , toPointOrdinal
         , toPointTime
         )
 
@@ -42,12 +42,11 @@ import Visualization.Scale as Scale
         , BandScale
         , ContinuousScale
         , ContinuousTimeScale
-        , defaultBandConfig
         )
 
 
 type Scale
-    = Ordinal
+    = Band
     | Linear
     | Time
 
@@ -66,8 +65,8 @@ type PointLinear
     = PointLinear ( Float, Float )
 
 
-type PointOrdinal
-    = PointOrdinal ( String, Float )
+type PointBand
+    = PointBand ( String, Float )
 
 
 type PointTime
@@ -89,7 +88,7 @@ type alias LinearDomain =
     ( Float, Float )
 
 
-type alias OrdinalDomain =
+type alias BandDomain =
     List String
 
 
@@ -111,13 +110,13 @@ fromPointTime (PointTime point) =
     point
 
 
-toPointOrdinal : ( String, Float ) -> PointOrdinal
-toPointOrdinal point =
-    PointOrdinal point
+toPointBand : ( String, Float ) -> PointBand
+toPointBand point =
+    PointBand point
 
 
-fromPointOrdinal : PointOrdinal -> ( String, Float )
-fromPointOrdinal (PointOrdinal point) =
+fromPointBand : PointBand -> ( String, Float )
+fromPointBand (PointBand point) =
     point
 
 
@@ -141,8 +140,8 @@ fromData (Data point) =
     point
 
 
-type OrdinalScale
-    = OrdinalScale (BandScale String)
+type BandScale
+    = BandScale (BandScale String)
 
 
 type LinearScale
@@ -173,7 +172,7 @@ type alias ConfigStructure =
     { height : Maybe Float
     , horizontalScaleType : Maybe Scale
     , linearDomain : Maybe LinearDomain
-    , ordinalScaleConfig : Maybe BandConfig
+    , bandScaleConfig : Maybe BandConfig
     , padding : Maybe Padding
     , verticalScaleType : Maybe Scale
     , width : Maybe Float
@@ -184,46 +183,34 @@ type alias InternalConfig =
     { height : Float
     , horizontalScaleType : Scale
     , linearDomain : LinearDomain
-    , ordinalScaleConfig : BandConfig
+    , bandScaleConfig : BandConfig
     , padding : Padding
     , verticalScaleType : Scale
     , width : Float
     }
 
 
-defaultConfig : InternalConfig
-defaultConfig =
-    { height = 400
-    , horizontalScaleType = Ordinal
-    , linearDomain = ( 0, 0 )
-    , ordinalScaleConfig = defaultBandConfig
-    , padding = { top = 5, right = 5, bottom = 5, left = 5 }
-    , verticalScaleType = Linear
-    , width = 600
-    }
-
-
 type Config
-    = Config InternalConfig
+    = Config ConfigStructure
 
 
-toConfig : InternalConfig -> Config
+toConfig : ConfigStructure -> Config
 toConfig config =
     Config config
 
 
-fromConfig : Config -> InternalConfig
+fromConfig : Config -> ConfigStructure
 fromConfig (Config config) =
     config
 
 
-setOrdinalScaleConfig : BandConfig -> Config -> Config
-setOrdinalScaleConfig bandConfig config =
+setBandScaleConfig : BandConfig -> Config -> Config
+setBandScaleConfig bandConfig config =
     let
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | ordinalScaleConfig = bandConfig }
+    toConfig { internalConfig | bandScaleConfig = Just bandConfig }
 
 
 setHeight : Float -> Config -> Config
@@ -232,7 +219,7 @@ setHeight height config =
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | height = height }
+    toConfig { internalConfig | height = Just height }
 
 
 setWidth : Float -> Config -> Config
@@ -241,7 +228,7 @@ setWidth width config =
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | width = width }
+    toConfig { internalConfig | width = Just width }
 
 
 setPadding : Padding -> Config -> Config
@@ -250,7 +237,7 @@ setPadding padding config =
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | padding = padding }
+    toConfig { internalConfig | padding = Just padding }
 
 
 setHorizontalScaleToLinear : Config -> Config
@@ -259,16 +246,16 @@ setHorizontalScaleToLinear config =
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | horizontalScaleType = Linear }
+    toConfig { internalConfig | horizontalScaleType = Just Linear }
 
 
-setHorizontalScaleToOrdinal : Config -> Config
-setHorizontalScaleToOrdinal config =
+setHorizontalScaleToBand : Config -> Config
+setHorizontalScaleToBand config =
     let
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | horizontalScaleType = Ordinal }
+    toConfig { internalConfig | horizontalScaleType = Just Band }
 
 
 setHorizontalScaleToTime : Config -> Config
@@ -277,7 +264,7 @@ setHorizontalScaleToTime config =
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | horizontalScaleType = Time }
+    toConfig { internalConfig | horizontalScaleType = Just Time }
 
 
 setVerticalScaleToLinear : Config -> Config
@@ -286,16 +273,16 @@ setVerticalScaleToLinear config =
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | verticalScaleType = Linear }
+    toConfig { internalConfig | verticalScaleType = Just Linear }
 
 
-setVerticalScaleToOrdinal : Config -> Config
-setVerticalScaleToOrdinal config =
+setVerticalScaleToBand : Config -> Config
+setVerticalScaleToBand config =
     let
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | verticalScaleType = Ordinal }
+    toConfig { internalConfig | verticalScaleType = Just Band }
 
 
 setVerticalScaleToTime : Config -> Config
@@ -304,4 +291,4 @@ setVerticalScaleToTime config =
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | verticalScaleType = Time }
+    toConfig { internalConfig | verticalScaleType = Just Time }
