@@ -15,12 +15,12 @@ main =
     let
         data =
             [ [ { cssClass = Nothing
-                , title = Nothing
+                , tooltip = Nothing
                 , point = toPointBand ( "a", 10 )
                 }
               ]
             ]
-                |> toData
     in
     Bar.initConfig
+        |> setHeight 500
         |> Bar.render data

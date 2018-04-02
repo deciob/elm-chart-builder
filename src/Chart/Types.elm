@@ -9,10 +9,10 @@ module Chart.Types
         , Orientation
         , Point(..)
         , Range
+        , Rectangle
         , Scale(..)
         , TimeDomain
         , fromConfig
-        , fromData
         , fromPointBand
         , fromPointLinear
         , fromPointTime
@@ -21,7 +21,6 @@ module Chart.Types
         , setPadding
         , setWidth
         , toConfig
-        , toData
         , toPointBand
         , toPointLinear
         , toPointTime
@@ -72,12 +71,12 @@ type Point
 type alias DataStructure =
     { cssClass : Maybe String
     , point : Point
-    , title : Maybe String
+    , tooltip : Maybe String
     }
 
 
-type Data
-    = Data (List (List DataStructure))
+type alias Data =
+    List (List DataStructure)
 
 
 type alias LinearDomain =
@@ -94,16 +93,6 @@ type alias TimeDomain =
 
 type alias Range =
     ( Float, Float )
-
-
-toData : List (List DataStructure) -> Data
-toData data =
-    Data data
-
-
-fromData : Data -> List (List DataStructure)
-fromData (Data data) =
-    data
 
 
 toPointTime : ( Date, Float ) -> Point
@@ -149,6 +138,10 @@ fromPointLinear point =
 
         _ ->
             Nothing
+
+
+type alias Rectangle =
+    { x : Float, y : Float, width : Float, height : Float }
 
 
 type BandScale

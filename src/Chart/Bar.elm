@@ -1,5 +1,6 @@
 module Chart.Bar exposing (..)
 
+import Chart.Helpers exposing (..)
 import Chart.Types exposing (..)
 import Html exposing (Html)
 import Svg exposing (..)
@@ -13,9 +14,9 @@ linearScale domain range =
     Scale.linear domain range
 
 
-bandScale : BandDomain -> Range -> BandScale String
-bandScale domain range =
-    Scale.band { defaultBandConfig | paddingInner = 0.1, paddingOuter = 0.2 }
+bandScale : BandConfig -> BandDomain -> Range -> BandScale String
+bandScale bandConfig domain range =
+    Scale.band bandConfig
         domain
         range
 
@@ -42,7 +43,7 @@ initConfig =
 
 
 render : Data -> Config -> Html msg
-render data_ config_ =
+render data config_ =
     let
         config : InternalConfig
         config =
@@ -62,9 +63,6 @@ render data_ config_ =
                         }
                    )
 
-        data =
-            fromData data_
-
         pointStructure =
             getDataPointStructure data
     in
@@ -81,9 +79,67 @@ render data_ config_ =
                     Html.text ""
 
 
+column : Float -> String -> Rectangle -> Svg msg
+column value cssClass { x, y, width, height } =
+    g [ class ("column " ++ cssClass) ]
+        [ Svg.title [] [ Svg.text <| toString value ]
+        , rect
+            [ Svg.Attributes.x <| toString x
+            , Svg.Attributes.y <| toString y
+            , Svg.Attributes.width <| toString width
+            , Svg.Attributes.height <| toString height
+            ]
+            []
+        ]
+
+
+bandColumn :
+    InternalConfig
+    -> BandScale String
+    -> ContinuousScale
+    -> DataStructure
+    -> Svg msg
+bandColumn config ordinalScale linearScale dataPoint =
+    let
+        ( category, value ) =
+            fromPointBand dataPoint.point |> Maybe.withDefault ( "", 0 )
+
+        rectangle =
+            { x = 1, y = 1, width = 1, height = 1 }
+
+        cssClass =
+            Maybe.withDefault "" dataPoint.cssClass
+    in
+    column value cssClass rectangle
+
+
 renderBand : List (List DataStructure) -> InternalConfig -> Html msg
 renderBand data config =
-    Html.text ""
+    let
+        d =
+            data
+                |> flatList
+                |> List.map
+                    (\d ->
+                        bandColumn
+                            config
+                            (bandScale config.bandScaleConfig [ "a" ] ( 0, 1 ))
+                            (linearScale ( 0, 1 ) ( 0, 1 ))
+                            d
+                    )
+    in
+    g
+        [ transform
+            ("translate("
+                ++ toString config.padding.left
+                ++ ", "
+                ++ toString config.padding.bottom
+                ++ ")"
+            )
+        , class "series"
+        ]
+    <|
+        d
 
 
 scaleTest : Config -> Config
