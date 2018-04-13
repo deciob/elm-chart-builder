@@ -23,9 +23,11 @@ bandScale bandConfig domain range =
 
 defaultConfig : InternalConfig
 defaultConfig =
-    { height = 400
+    { bandScaleConfig = defaultBandConfig
+    , height = 400
+    , layout = Grouped
     , linearDomain = ( 0, 0 )
-    , bandScaleConfig = defaultBandConfig
+    , orientation = Horizontal
     , padding = { top = 5, right = 5, bottom = 5, left = 5 }
     , width = 600
     }
@@ -34,12 +36,35 @@ defaultConfig =
 initConfig : Config
 initConfig =
     toConfig
-        { height = Nothing
+        { bandScaleConfig = Nothing
+        , height = Nothing
+        , layout = Nothing
         , linearDomain = Nothing
-        , bandScaleConfig = Nothing
+        , orientation = Nothing
         , padding = Nothing
         , width = Nothing
         }
+
+
+internalConfig : Config -> InternalConfig
+internalConfig config =
+    fromConfig config
+        |> (\config ->
+                { bandScaleConfig =
+                    Maybe.withDefault defaultConfig.bandScaleConfig
+                        config.bandScaleConfig
+                , height = Maybe.withDefault defaultConfig.height config.height
+                , layout = Maybe.withDefault defaultConfig.layout config.layout
+                , linearDomain =
+                    Maybe.withDefault defaultConfig.linearDomain
+                        config.linearDomain
+                , orientation = Maybe.withDefault defaultConfig.orientation config.orientation
+                , padding =
+                    Maybe.withDefault defaultConfig.padding
+                        config.padding
+                , width = Maybe.withDefault defaultConfig.width config.width
+                }
+           )
 
 
 render : Data -> Config -> Html msg
@@ -47,21 +72,7 @@ render data config_ =
     let
         config : InternalConfig
         config =
-            fromConfig config_
-                |> (\config ->
-                        { height = Maybe.withDefault defaultConfig.height config.height
-                        , linearDomain =
-                            Maybe.withDefault defaultConfig.linearDomain
-                                config.linearDomain
-                        , bandScaleConfig =
-                            Maybe.withDefault defaultConfig.bandScaleConfig
-                                config.bandScaleConfig
-                        , padding =
-                            Maybe.withDefault defaultConfig.padding
-                                config.padding
-                        , width = Maybe.withDefault defaultConfig.width config.width
-                        }
-                   )
+            internalConfig config_
 
         pointStructure =
             getDataPointStructure data
@@ -113,20 +124,34 @@ bandColumn config ordinalScale linearScale dataPoint =
     column value cssClass rectangle
 
 
+gBlock : List (Svg msg) -> Svg msg
+gBlock children =
+    g [] children
+
+
 renderBand : List (List DataStructure) -> InternalConfig -> Html msg
 renderBand data config =
     let
         d =
-            data
-                |> flatList
-                |> List.map
-                    (\d ->
-                        bandColumn
-                            config
-                            (bandScale config.bandScaleConfig [ "a" ] ( 0, 1 ))
-                            (linearScale ( 0, 1 ) ( 0, 1 ))
-                            d
-                    )
+            case config.layout of
+                Grouped ->
+                    data
+                        |> List.map
+                            (\dataGroup ->
+                                dataGroup
+                                    |> List.map
+                                        (\d ->
+                                            bandColumn
+                                                config
+                                                (bandScale config.bandScaleConfig [ "a" ] ( 0, 1 ))
+                                                (linearScale ( 0, 1 ) ( 0, 1 ))
+                                                d
+                                        )
+                                    |> gBlock
+                            )
+
+                _ ->
+                    []
     in
     g
         [ transform

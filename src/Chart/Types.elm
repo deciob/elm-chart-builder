@@ -5,8 +5,9 @@ module Chart.Types
         , Data
         , DataStructure
         , InternalConfig
+        , Layout(..)
         , LinearDomain
-        , Orientation
+        , Orientation(..)
         , Point(..)
         , Range
         , Rectangle
@@ -57,8 +58,7 @@ getDataPointStructure : List (List DataStructure) -> Maybe Point
 getDataPointStructure data =
     data
         |> List.head
-        |> Maybe.withDefault []
-        |> List.head
+        |> Maybe.andThen List.head
         |> Maybe.map .point
 
 
@@ -173,18 +173,22 @@ type alias Padding =
 
 
 type alias ConfigStructure =
-    { height : Maybe Float
+    { bandScaleConfig : Maybe BandConfig
+    , height : Maybe Float
+    , layout : Maybe Layout
     , linearDomain : Maybe LinearDomain
-    , bandScaleConfig : Maybe BandConfig
+    , orientation : Maybe Orientation
     , padding : Maybe Padding
     , width : Maybe Float
     }
 
 
 type alias InternalConfig =
-    { height : Float
+    { bandScaleConfig : BandConfig
+    , height : Float
+    , layout : Layout
     , linearDomain : LinearDomain
-    , bandScaleConfig : BandConfig
+    , orientation : Orientation
     , padding : Padding
     , width : Float
     }
@@ -220,6 +224,24 @@ setHeight height config =
             fromConfig config
     in
     toConfig { internalConfig | height = Just height }
+
+
+setLayout : Layout -> Config -> Config
+setLayout layout config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | layout = Just layout }
+
+
+setOrientation : Orientation -> Config -> Config
+setOrientation orientation config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | orientation = Just orientation }
 
 
 setWidth : Float -> Config -> Config
