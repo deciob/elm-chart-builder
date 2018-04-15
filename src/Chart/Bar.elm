@@ -46,8 +46,8 @@ initConfig =
         }
 
 
-internalConfig : Config -> InternalConfig
-internalConfig config =
+internalConfig : Data -> Config -> InternalConfig
+internalConfig data config =
     fromConfig config
         |> (\config ->
                 { bandScaleConfig =
@@ -56,7 +56,14 @@ internalConfig config =
                 , height = Maybe.withDefault defaultConfig.height config.height
                 , layout = Maybe.withDefault defaultConfig.layout config.layout
                 , linearDomain =
-                    Maybe.withDefault defaultConfig.linearDomain
+                    Maybe.withDefault
+                        ( 0
+                        , data
+                            |> flatList
+                            |> List.map (.point >> fromPointLinear >> Maybe.withDefault ( 0, 0 ) >> Tuple.second)
+                            |> List.maximum
+                            |> Maybe.withDefault 0
+                        )
                         config.linearDomain
                 , orientation = Maybe.withDefault defaultConfig.orientation config.orientation
                 , padding =
@@ -72,7 +79,7 @@ render data config_ =
     let
         config : InternalConfig
         config =
-            internalConfig config_
+            internalConfig data config_
 
         pointStructure =
             getDataPointStructure data
