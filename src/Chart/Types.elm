@@ -187,7 +187,7 @@ type alias InternalConfig =
     { bandScaleConfig : BandConfig
     , height : Float
     , layout : Layout
-    , linearDomain : LinearDomain
+    , linearDomain : Maybe LinearDomain
     , orientation : Orientation
     , padding : Padding
     , width : Float

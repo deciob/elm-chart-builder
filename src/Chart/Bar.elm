@@ -26,7 +26,7 @@ defaultConfig =
     { bandScaleConfig = defaultBandConfig
     , height = 400
     , layout = Grouped
-    , linearDomain = ( 0, 0 )
+    , linearDomain = Nothing
     , orientation = Horizontal
     , padding = { top = 5, right = 5, bottom = 5, left = 5 }
     , width = 600
@@ -55,16 +55,7 @@ internalConfig data config =
                         config.bandScaleConfig
                 , height = Maybe.withDefault defaultConfig.height config.height
                 , layout = Maybe.withDefault defaultConfig.layout config.layout
-                , linearDomain =
-                    Maybe.withDefault
-                        ( 0
-                        , data
-                            |> flatList
-                            |> List.map (.point >> fromPointLinear >> Maybe.withDefault ( 0, 0 ) >> Tuple.second)
-                            |> List.maximum
-                            |> Maybe.withDefault 0
-                        )
-                        config.linearDomain
+                , linearDomain = config.linearDomain
                 , orientation = Maybe.withDefault defaultConfig.orientation config.orientation
                 , padding =
                     Maybe.withDefault defaultConfig.padding
@@ -139,6 +130,31 @@ gBlock children =
 renderBand : List (List DataStructure) -> InternalConfig -> Html msg
 renderBand data config =
     let
+        horizontalRange =
+            config.width - config.padding.left - config.padding.right
+
+        verticalRange =
+            config.height - config.padding.top - config.padding.bottom
+
+        linearDomain =
+            case config.linearDomain of
+                Nothing ->
+                    ( 0
+                    , data
+                        |> flatList
+                        |> List.map (.point >> fromPointBand >> Maybe.withDefault ( "", 0 ) >> Tuple.second)
+                        |> List.maximum
+                        |> Maybe.withDefault 0
+                    )
+
+                Just linearDomain ->
+                    linearDomain
+
+        bandDomain =
+            data
+                |> flatList
+                |> List.map (.point >> fromPointBand >> Maybe.withDefault ( "", 0 ) >> Tuple.first)
+
         d =
             case config.layout of
                 Grouped ->
