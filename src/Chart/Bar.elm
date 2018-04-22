@@ -131,24 +131,16 @@ renderBand : List (List DataStructure) -> InternalConfig -> Html msg
 renderBand data config =
     let
         horizontalRange =
-            config.width - config.padding.left - config.padding.right
+            ( 0, config.width - config.padding.left - config.padding.right )
 
         verticalRange =
             config.height - config.padding.top - config.padding.bottom
 
         linearDomain =
-            case config.linearDomain of
-                Nothing ->
-                    ( 0
-                    , data
-                        |> flatList
-                        |> List.map (.point >> fromPointBand >> Maybe.withDefault ( "", 0 ) >> Tuple.second)
-                        |> List.maximum
-                        |> Maybe.withDefault 0
-                    )
-
-                Just linearDomain ->
-                    linearDomain
+            getLinearDomain
+                data
+                (.point >> fromPointBand >> Maybe.withDefault ( "", 0 ) >> Tuple.second)
+                config.linearDomain
 
         bandDomain =
             data
@@ -167,7 +159,7 @@ renderBand data config =
                                             bandColumn
                                                 config
                                                 (bandScale config.bandScaleConfig [ "a" ] ( 0, 1 ))
-                                                (linearScale ( 0, 1 ) ( 0, 1 ))
+                                                (linearScale linearDomain horizontalRange)
                                                 d
                                         )
                                     |> gBlock
