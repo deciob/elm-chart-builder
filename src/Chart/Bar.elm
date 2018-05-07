@@ -77,7 +77,7 @@ render data config_ =
     in
     case pointStructure of
         Nothing ->
-            Html.text ""
+            Html.text "no point struncture"
 
         Just point ->
             case point of
@@ -114,7 +114,11 @@ bandColumn config ordinalScale linearScale dataPoint =
             fromPointBand dataPoint.point |> Maybe.withDefault ( "", 0 )
 
         rectangle =
-            { x = 1, y = 1, width = 1, height = 1 }
+            { x = Scale.convert ordinalScale category
+            , y = Scale.convert linearScale value
+            , width = Scale.bandwidth ordinalScale
+            , height = config.height - Scale.convert linearScale value - config.padding.bottom
+            }
 
         cssClass =
             Maybe.withDefault "" dataPoint.cssClass
@@ -134,13 +138,14 @@ renderBand data config =
             ( 0, config.width - config.padding.left - config.padding.right )
 
         verticalRange =
-            config.height - config.padding.top - config.padding.bottom
+            ( config.height - config.padding.top - config.padding.bottom, 0 )
 
         linearDomain =
             getLinearDomain
                 data
                 (.point >> fromPointBand >> Maybe.withDefault ( "", 0 ) >> Tuple.second)
                 config.linearDomain
+                |> (\d -> ( 0, Tuple.second d ))
 
         bandDomain =
             data
@@ -158,8 +163,8 @@ renderBand data config =
                                         (\d ->
                                             bandColumn
                                                 config
-                                                (bandScale config.bandScaleConfig [ "a" ] ( 0, 1 ))
-                                                (linearScale linearDomain horizontalRange)
+                                                (bandScale config.bandScaleConfig bandDomain horizontalRange)
+                                                (linearScale linearDomain verticalRange)
                                                 d
                                         )
                                     |> gBlock
@@ -168,18 +173,20 @@ renderBand data config =
                 _ ->
                     []
     in
-    g
-        [ transform
-            ("translate("
-                ++ toString config.padding.left
-                ++ ", "
-                ++ toString config.padding.bottom
-                ++ ")"
-            )
-        , class "series"
+    svg [ width (toString config.width ++ "px"), height (toString config.height ++ "px") ]
+        [ g
+            [ transform
+                ("translate("
+                    ++ toString config.padding.left
+                    ++ ", "
+                    ++ toString config.padding.bottom
+                    ++ ")"
+                )
+            , class "series"
+            ]
+          <|
+            d
         ]
-    <|
-        d
 
 
 scaleTest : Config -> Config

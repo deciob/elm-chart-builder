@@ -18,6 +18,7 @@ module Chart.Types
         , fromPointLinear
         , fromPointTime
         , getDataPointStructure
+        , setBandScaleConfig
         , setHeight
         , setPadding
         , setWidth

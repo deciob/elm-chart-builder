@@ -18,9 +18,19 @@ main =
                 , tooltip = Nothing
                 , point = toPointBand ( "a", 10 )
                 }
+              , { cssClass = Nothing
+                , tooltip = Nothing
+                , point = toPointBand ( "b", 13 )
+                }
               ]
             ]
     in
     Bar.initConfig
         |> setHeight 500
+        |> setWidth 600
+        |> setBandScaleConfig
+            { paddingInner = 0.1
+            , paddingOuter = 0.1
+            , align = 0.5
+            }
         |> Bar.render data
