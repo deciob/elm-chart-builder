@@ -28,7 +28,7 @@ defaultConfig =
     , layout = Grouped
     , linearDomain = Nothing
     , orientation = Horizontal
-    , padding = { top = 5, right = 5, bottom = 5, left = 5 }
+    , margin = { top = 5, right = 5, bottom = 5, left = 5 }
     , width = 600
     }
 
@@ -41,7 +41,7 @@ initConfig =
         , layout = Nothing
         , linearDomain = Nothing
         , orientation = Nothing
-        , padding = Nothing
+        , margin = Nothing
         , width = Nothing
         }
 
@@ -50,17 +50,32 @@ internalConfig : Data -> Config -> InternalConfig
 internalConfig data config =
     fromConfig config
         |> (\config ->
+                let
+                    margin =
+                        Maybe.withDefault defaultConfig.margin
+                            config.margin
+
+                    height =
+                        Maybe.withDefault (defaultConfig.height - margin.top - margin.bottom)
+                            config.height
+                            - margin.top
+                            - margin.bottom
+
+                    width =
+                        Maybe.withDefault (defaultConfig.width - margin.top - margin.bottom)
+                            config.width
+                            - margin.left
+                            - margin.right
+                in
                 { bandScaleConfig =
                     Maybe.withDefault defaultConfig.bandScaleConfig
                         config.bandScaleConfig
-                , height = Maybe.withDefault defaultConfig.height config.height
+                , height = height
                 , layout = Maybe.withDefault defaultConfig.layout config.layout
                 , linearDomain = config.linearDomain
                 , orientation = Maybe.withDefault defaultConfig.orientation config.orientation
-                , padding =
-                    Maybe.withDefault defaultConfig.padding
-                        config.padding
-                , width = Maybe.withDefault defaultConfig.width config.width
+                , margin = margin
+                , width = width
                 }
            )
 
@@ -117,7 +132,7 @@ bandColumn config ordinalScale linearScale dataPoint =
             { x = Scale.convert ordinalScale category
             , y = Scale.convert linearScale value
             , width = Scale.bandwidth ordinalScale
-            , height = config.height - Scale.convert linearScale value - config.padding.bottom
+            , height = config.height - Scale.convert linearScale value
             }
 
         cssClass =
@@ -135,10 +150,10 @@ renderBand : List (List DataStructure) -> InternalConfig -> Html msg
 renderBand data config =
     let
         horizontalRange =
-            ( 0, config.width - config.padding.left - config.padding.right )
+            ( 0, config.width )
 
         verticalRange =
-            ( config.height - config.padding.top - config.padding.bottom, 0 )
+            ( config.height, 0 )
 
         linearDomain =
             getLinearDomain
@@ -173,13 +188,16 @@ renderBand data config =
                 _ ->
                     []
     in
-    svg [ width (toString config.width ++ "px"), height (toString config.height ++ "px") ]
+    svg
+        [ width (toString (config.width + config.margin.left + config.margin.right) ++ "px")
+        , height (toString (config.height + config.margin.top + config.margin.bottom) ++ "px")
+        ]
         [ g
             [ transform
                 ("translate("
-                    ++ toString config.padding.left
+                    ++ toString config.margin.left
                     ++ ", "
-                    ++ toString config.padding.bottom
+                    ++ toString config.margin.top
                     ++ ")"
                 )
             , class "series"

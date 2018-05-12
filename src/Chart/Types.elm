@@ -20,7 +20,7 @@ module Chart.Types
         , getDataPointStructure
         , setBandScaleConfig
         , setHeight
-        , setPadding
+        , setMargin
         , setWidth
         , toConfig
         , toPointBand
@@ -165,7 +165,7 @@ type alias Width =
     Maybe Float
 
 
-type alias Padding =
+type alias Margin =
     { top : Float
     , right : Float
     , bottom : Float
@@ -179,7 +179,7 @@ type alias ConfigStructure =
     , layout : Maybe Layout
     , linearDomain : Maybe LinearDomain
     , orientation : Maybe Orientation
-    , padding : Maybe Padding
+    , margin : Maybe Margin
     , width : Maybe Float
     }
 
@@ -190,7 +190,7 @@ type alias InternalConfig =
     , layout : Layout
     , linearDomain : Maybe LinearDomain
     , orientation : Orientation
-    , padding : Padding
+    , margin : Margin
     , width : Float
     }
 
@@ -254,10 +254,10 @@ setWidth width config =
     toConfig { internalConfig | width = Just width }
 
 
-setPadding : Padding -> Config -> Config
-setPadding padding config =
+setMargin : Margin -> Config -> Config
+setMargin margin config =
     let
         internalConfig =
             fromConfig config
     in
-    toConfig { internalConfig | padding = Just padding }
+    toConfig { internalConfig | margin = Just margin }

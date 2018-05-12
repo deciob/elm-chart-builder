@@ -6,6 +6,7 @@ module BarChart exposing (main)
 import Chart.Bar as Bar
 import Chart.Types exposing (..)
 import Html exposing (Html)
+import Html.Attributes
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 
@@ -25,12 +26,26 @@ main =
               ]
             ]
     in
-    Bar.initConfig
-        |> setHeight 500
-        |> setWidth 600
-        |> setBandScaleConfig
-            { paddingInner = 0.1
-            , paddingOuter = 0.1
-            , align = 0.5
-            }
-        |> Bar.render data
+    Html.div
+        [ Html.Attributes.style
+            [ ( "height", "600px" )
+            , ( "width", "600px" )
+            , ( "background-color", "red" )
+            ]
+        ]
+        [ Bar.initConfig
+            |> setHeight 600
+            |> setWidth 600
+            |> setMargin
+                { top = 10
+                , right = 10
+                , bottom = 10
+                , left = 10
+                }
+            |> setBandScaleConfig
+                { paddingInner = 0.05
+                , paddingOuter = 0
+                , align = 0.5
+                }
+            |> Bar.render data
+        ]
