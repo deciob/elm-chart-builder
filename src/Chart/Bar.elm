@@ -21,12 +21,23 @@ bandScale bandConfig domain range =
         range
 
 
+linearAxis : Axis.Options Float -> ContinuousScale -> Svg msg
+linearAxis options scale =
+    Axis.axis options scale
+
+
+bandAxis : Axis.Options String -> BandScale String -> Svg msg
+bandAxis options scale =
+    Axis.axis options (Scale.toRenderable scale)
+
+
 defaultConfig : InternalConfig
 defaultConfig =
     { bandScaleConfig = defaultBandConfig
     , height = 400
     , layout = Grouped
     , linearDomain = Nothing
+    , linearAxisOptions = Axis.defaultOptions
     , orientation = Horizontal
     , margin = { top = 5, right = 5, bottom = 5, left = 5 }
     , width = 600
@@ -40,6 +51,7 @@ initConfig =
         , height = Nothing
         , layout = Nothing
         , linearDomain = Nothing
+        , linearAxisOptions = Nothing
         , orientation = Nothing
         , margin = Nothing
         , width = Nothing
@@ -73,6 +85,7 @@ internalConfig data config =
                 , height = height
                 , layout = Maybe.withDefault defaultConfig.layout config.layout
                 , linearDomain = config.linearDomain
+                , linearAxisOptions = Maybe.withDefault Axis.defaultOptions config.linearAxisOptions
                 , orientation = Maybe.withDefault defaultConfig.orientation config.orientation
                 , margin = margin
                 , width = width
@@ -167,6 +180,9 @@ renderBand data config =
                 |> flatList
                 |> List.map (.point >> fromPointBand >> Maybe.withDefault ( "", 0 ) >> Tuple.first)
 
+        appliedLinearScale =
+            linearScale linearDomain verticalRange
+
         d =
             case config.layout of
                 Grouped ->
@@ -179,7 +195,7 @@ renderBand data config =
                                             bandColumn
                                                 config
                                                 (bandScale config.bandScaleConfig bandDomain horizontalRange)
-                                                (linearScale linearDomain verticalRange)
+                                                appliedLinearScale
                                                 d
                                         )
                                     |> gBlock
@@ -202,11 +218,17 @@ renderBand data config =
                 )
             , class "series"
             ]
+            [ linearAxis config.linearAxisOptions appliedLinearScale ]
+        , g
+            [ transform
+                ("translate("
+                    ++ toString config.margin.left
+                    ++ ", "
+                    ++ toString config.margin.top
+                    ++ ")"
+                )
+            , class "series"
+            ]
           <|
             d
         ]
-
-
-scaleTest : Config -> Config
-scaleTest config =
-    config

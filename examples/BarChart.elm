@@ -9,6 +9,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import Visualization.Axis as Axis exposing (defaultOptions)
 
 
 main : Html msg
@@ -40,12 +41,14 @@ main =
                 { top = 10
                 , right = 10
                 , bottom = 10
-                , left = 10
+                , left = 30
                 }
             |> setBandScaleConfig
                 { paddingInner = 0.05
-                , paddingOuter = 0
+                , paddingOuter = 0.05
                 , align = 0.5
                 }
+            |> setLinearAxisOptions
+                { defaultOptions | orientation = Axis.Left, tickCount = 5 }
             |> Bar.render data
         ]

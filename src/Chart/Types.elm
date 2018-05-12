@@ -20,6 +20,7 @@ module Chart.Types
         , getDataPointStructure
         , setBandScaleConfig
         , setHeight
+        , setLinearAxisOptions
         , setMargin
         , setWidth
         , toConfig
@@ -30,6 +31,7 @@ module Chart.Types
 
 import Date exposing (Date)
 import Html exposing (..)
+import Visualization.Axis
 import Visualization.Scale as Scale
     exposing
         ( BandConfig
@@ -178,6 +180,7 @@ type alias ConfigStructure =
     , height : Maybe Float
     , layout : Maybe Layout
     , linearDomain : Maybe LinearDomain
+    , linearAxisOptions : Maybe (Visualization.Axis.Options Float)
     , orientation : Maybe Orientation
     , margin : Maybe Margin
     , width : Maybe Float
@@ -189,6 +192,7 @@ type alias InternalConfig =
     , height : Float
     , layout : Layout
     , linearDomain : Maybe LinearDomain
+    , linearAxisOptions : Visualization.Axis.Options Float
     , orientation : Orientation
     , margin : Margin
     , width : Float
@@ -261,3 +265,12 @@ setMargin margin config =
             fromConfig config
     in
     toConfig { internalConfig | margin = Just margin }
+
+
+setLinearAxisOptions : Visualization.Axis.Options Float -> Config -> Config
+setLinearAxisOptions options config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | linearAxisOptions = Just options }
