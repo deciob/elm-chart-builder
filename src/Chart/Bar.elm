@@ -33,7 +33,8 @@ bandAxis options scale =
 
 defaultConfig : InternalConfig
 defaultConfig =
-    { bandScaleConfig = defaultBandConfig
+    { bandAxisOptions = Axis.defaultOptions
+    , bandScaleConfig = defaultBandConfig
     , height = 400
     , layout = Grouped
     , linearDomain = Nothing
@@ -47,7 +48,8 @@ defaultConfig =
 initConfig : Config
 initConfig =
     toConfig
-        { bandScaleConfig = Nothing
+        { bandAxisOptions = Nothing
+        , bandScaleConfig = Nothing
         , height = Nothing
         , layout = Nothing
         , linearDomain = Nothing
@@ -78,15 +80,28 @@ internalConfig data config =
                             config.width
                             - margin.left
                             - margin.right
+
+                    orientation =
+                        Maybe.withDefault defaultConfig.orientation config.orientation
+
+                    bandAxisOptions =
+                        case orientation of
+                            Vertical ->
+                                Maybe.withDefault Axis.defaultOptions config.bandAxisOptions
+
+                            Horizontal ->
+                                Maybe.withDefault { defaultOptions | orientation = Axis.Bottom }
+                                    config.bandAxisOptions
                 in
-                { bandScaleConfig =
+                { bandAxisOptions = bandAxisOptions
+                , bandScaleConfig =
                     Maybe.withDefault defaultConfig.bandScaleConfig
                         config.bandScaleConfig
                 , height = height
                 , layout = Maybe.withDefault defaultConfig.layout config.layout
                 , linearDomain = config.linearDomain
                 , linearAxisOptions = Maybe.withDefault Axis.defaultOptions config.linearAxisOptions
-                , orientation = Maybe.withDefault defaultConfig.orientation config.orientation
+                , orientation = orientation
                 , margin = margin
                 , width = width
                 }
@@ -183,6 +198,9 @@ renderBand data config =
         appliedLinearScale =
             linearScale linearDomain verticalRange
 
+        appliedBandScale =
+            bandScale config.bandScaleConfig bandDomain horizontalRange
+
         d =
             case config.layout of
                 Grouped ->
@@ -194,7 +212,7 @@ renderBand data config =
                                         (\d ->
                                             bandColumn
                                                 config
-                                                (bandScale config.bandScaleConfig bandDomain horizontalRange)
+                                                appliedBandScale
                                                 appliedLinearScale
                                                 d
                                         )
@@ -219,6 +237,17 @@ renderBand data config =
             , class "series"
             ]
             [ linearAxis config.linearAxisOptions appliedLinearScale ]
+        , g
+            [ transform
+                ("translate("
+                    ++ toString config.margin.left
+                    ++ ", "
+                    ++ toString (config.height + config.margin.top)
+                    ++ ")"
+                )
+            , class "series"
+            ]
+            [ bandAxis config.bandAxisOptions appliedBandScale ]
         , g
             [ transform
                 ("translate("

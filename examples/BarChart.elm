@@ -40,7 +40,7 @@ main =
             |> setMargin
                 { top = 10
                 , right = 10
-                , bottom = 10
+                , bottom = 30
                 , left = 30
                 }
             |> setBandScaleConfig
@@ -49,6 +49,6 @@ main =
                 , align = 0.5
                 }
             |> setLinearAxisOptions
-                { defaultOptions | orientation = Axis.Left, tickCount = 5 }
+                { defaultOptions | tickCount = 5 }
             |> Bar.render data
         ]
