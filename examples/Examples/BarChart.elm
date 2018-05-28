@@ -1,4 +1,4 @@
-module BarChart exposing (main)
+module Examples.BarChart exposing (data, main)
 
 {-| This module shows how to build a simple bar chart.
 -}
@@ -12,21 +12,31 @@ import Svg.Attributes exposing (..)
 import Visualization.Axis as Axis exposing (defaultOptions)
 
 
+data : Data
+data =
+    [ [ { cssClass = Nothing
+        , tooltip = Nothing
+        , point = toPointBand ( "a", 10 )
+        }
+      , { cssClass = Nothing
+        , tooltip = Nothing
+        , point = toPointBand ( "b", 13 )
+        }
+      ]
+    , [ { cssClass = Nothing
+        , tooltip = Nothing
+        , point = toPointBand ( "a", 20 )
+        }
+      , { cssClass = Nothing
+        , tooltip = Nothing
+        , point = toPointBand ( "b", 13 )
+        }
+      ]
+    ]
+
+
 main : Html msg
 main =
-    let
-        data =
-            [ [ { cssClass = Nothing
-                , tooltip = Nothing
-                , point = toPointBand ( "a", 10 )
-                }
-              , { cssClass = Nothing
-                , tooltip = Nothing
-                , point = toPointBand ( "b", 13 )
-                }
-              ]
-            ]
-    in
     Html.div
         [ Html.Attributes.style
             [ ( "height", "600px" )

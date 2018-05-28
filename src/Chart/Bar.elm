@@ -151,15 +151,15 @@ bandColumn :
     -> ContinuousScale
     -> DataStructure
     -> Svg msg
-bandColumn config ordinalScale linearScale dataPoint =
+bandColumn config bandScale linearScale dataPoint =
     let
         ( category, value ) =
             fromPointBand dataPoint.point |> Maybe.withDefault ( "", 0 )
 
         rectangle =
-            { x = Scale.convert ordinalScale category
+            { x = Scale.convert bandScale category
             , y = Scale.convert linearScale value
-            , width = Scale.bandwidth ordinalScale
+            , width = Scale.bandwidth bandScale
             , height = config.height - Scale.convert linearScale value
             }
 
@@ -172,6 +172,57 @@ bandColumn config ordinalScale linearScale dataPoint =
 gBlock : List (Svg msg) -> Svg msg
 gBlock children =
     g [] children
+
+
+getBandGroupScale :
+    InternalConfig
+    -> BandScale String
+    -> Int
+    -> List DataStructure
+    -> BandScale String
+getBandGroupScale config bandScaleGroup idx dataGroup =
+    let
+        bandWidth =
+            Scale.bandwidth bandScaleGroup
+
+        initialPoint =
+            Scale.convert bandScaleGroup <| toString idx
+
+        endPoint =
+            initialPoint + bandWidth
+
+        horizontalRange =
+            ( initialPoint, endPoint )
+
+        bandDomain =
+            dataGroup
+                |> List.map (.point >> fromPointBand >> Maybe.withDefault ( "", 0 ) >> Tuple.first)
+    in
+    bandScale config.bandScaleConfig bandDomain horizontalRange
+
+
+renderBandGroup :
+    InternalConfig
+    -> BandScale String
+    -> ContinuousScale
+    -> Int
+    -> List DataStructure
+    -> Svg msg
+renderBandGroup config bandScaleGroup appliedLinearScale idx dataGroup =
+    let
+        appliedBandScale =
+            getBandGroupScale config bandScaleGroup idx dataGroup
+    in
+    dataGroup
+        |> List.map
+            (\d ->
+                bandColumn
+                    config
+                    appliedBandScale
+                    appliedLinearScale
+                    d
+            )
+        |> gBlock
 
 
 renderBand : List (List DataStructure) -> InternalConfig -> Html msg
@@ -192,8 +243,7 @@ renderBand data config =
 
         bandDomain =
             data
-                |> flatList
-                |> List.map (.point >> fromPointBand >> Maybe.withDefault ( "", 0 ) >> Tuple.first)
+                |> List.indexedMap (\idx _ -> toString idx)
 
         appliedLinearScale =
             linearScale linearDomain verticalRange
@@ -205,18 +255,9 @@ renderBand data config =
             case config.layout of
                 Grouped ->
                     data
-                        |> List.map
-                            (\dataGroup ->
-                                dataGroup
-                                    |> List.map
-                                        (\d ->
-                                            bandColumn
-                                                config
-                                                appliedBandScale
-                                                appliedLinearScale
-                                                d
-                                        )
-                                    |> gBlock
+                        |> List.indexedMap
+                            (\idx dataGroup ->
+                                renderBandGroup config appliedBandScale appliedLinearScale idx dataGroup
                             )
 
                 _ ->
