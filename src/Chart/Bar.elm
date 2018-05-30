@@ -174,33 +174,6 @@ gBlock children =
     g [] children
 
 
-getBandGroupScale :
-    InternalConfig
-    -> BandScale String
-    -> Int
-    -> List DataStructure
-    -> BandScale String
-getBandGroupScale config bandScaleGroup idx dataGroup =
-    let
-        bandWidth =
-            Scale.bandwidth bandScaleGroup
-
-        initialPoint =
-            Scale.convert bandScaleGroup <| toString idx
-
-        endPoint =
-            initialPoint + bandWidth
-
-        horizontalRange =
-            ( initialPoint, endPoint )
-
-        bandDomain =
-            dataGroup
-                |> List.map (.point >> fromPointBand >> Maybe.withDefault ( "", 0 ) >> Tuple.first)
-    in
-    bandScale config.bandScaleConfig bandDomain horizontalRange
-
-
 renderBandGroup :
     InternalConfig
     -> BandScale String
@@ -223,6 +196,20 @@ renderBandGroup config bandScaleGroup appliedLinearScale idx dataGroup =
                     d
             )
         |> gBlock
+
+
+renderBandGroupAxis :
+    InternalConfig
+    -> BandScale String
+    -> Int
+    -> List DataStructure
+    -> Svg msg
+renderBandGroupAxis config bandScaleGroup idx dataGroup =
+    let
+        appliedBandScale =
+            getBandGroupScale config bandScaleGroup idx dataGroup
+    in
+    bandAxis config.bandAxisOptions appliedBandScale
 
 
 renderBand : List (List DataStructure) -> InternalConfig -> Html msg
@@ -251,17 +238,26 @@ renderBand data config =
         appliedBandScale =
             bandScale config.bandScaleConfig bandDomain horizontalRange
 
-        d =
+        ( d, bandAxisGroup ) =
             case config.layout of
                 Grouped ->
                     data
                         |> List.indexedMap
                             (\idx dataGroup ->
-                                renderBandGroup config appliedBandScale appliedLinearScale idx dataGroup
+                                ( renderBandGroup config appliedBandScale appliedLinearScale idx dataGroup
+                                , renderBandGroupAxis config appliedBandScale idx dataGroup
+                                )
                             )
+                        |> List.unzip
 
                 _ ->
-                    []
+                    ( [], [] )
+
+        bandAxisOptions =
+            config.bandAxisOptions
+
+        outerAxisOptions =
+            { bandAxisOptions | tickSizeInner = 12 }
     in
     svg
         [ width (toString (config.width + config.margin.left + config.margin.right) ++ "px")
@@ -288,7 +284,8 @@ renderBand data config =
                 )
             , class "series"
             ]
-            [ bandAxis config.bandAxisOptions appliedBandScale ]
+            --[ bandAxis config.bandAxisOptions appliedBandScale ]
+            (bandAxis outerAxisOptions appliedBandScale :: bandAxisGroup)
         , g
             [ transform
                 ("translate("
@@ -302,3 +299,34 @@ renderBand data config =
           <|
             d
         ]
+
+
+
+-- HELPERS
+
+
+getBandGroupScale :
+    InternalConfig
+    -> BandScale String
+    -> Int
+    -> List DataStructure
+    -> BandScale String
+getBandGroupScale config bandScaleGroup idx dataGroup =
+    let
+        bandWidth =
+            Scale.bandwidth bandScaleGroup
+
+        initialPoint =
+            Scale.convert bandScaleGroup <| toString idx
+
+        endPoint =
+            initialPoint + bandWidth
+
+        horizontalRange =
+            ( initialPoint, endPoint )
+
+        bandDomain =
+            dataGroup
+                |> List.map (.point >> fromPointBand >> Maybe.withDefault ( "", 0 ) >> Tuple.first)
+    in
+    bandScale config.bandScaleConfig bandDomain horizontalRange
