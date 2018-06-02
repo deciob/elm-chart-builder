@@ -23,9 +23,23 @@ data =
         , point = toPointBand ( "b", 13 )
         }
       ]
+    ]
+
+
+data2 : Data
+data2 =
+    [ [ { cssClass = Nothing
+        , tooltip = Nothing
+        , point = toPointBand ( "a", 10 )
+        }
+      , { cssClass = Nothing
+        , tooltip = Nothing
+        , point = toPointBand ( "b", 13 )
+        }
+      ]
     , [ { cssClass = Nothing
         , tooltip = Nothing
-        , point = toPointBand ( "a", 20 )
+        , point = toPointBand ( "a", 30 )
         }
       , { cssClass = Nothing
         , tooltip = Nothing
@@ -60,5 +74,5 @@ main =
                 }
             |> setLinearAxisOptions
                 { defaultOptions | tickCount = 5 }
-            |> Bar.render data
+            |> Bar.render data2
         ]

@@ -84,13 +84,21 @@ internalConfig data config =
                     orientation =
                         Maybe.withDefault defaultConfig.orientation config.orientation
 
+                    axisDefaultOptions =
+                        Axis.defaultOptions
+
                     bandAxisOptions =
                         case orientation of
                             Vertical ->
-                                Maybe.withDefault Axis.defaultOptions config.bandAxisOptions
+                                Maybe.withDefault { axisDefaultOptions | tickFormat = Just identity }
+                                    config.bandAxisOptions
 
                             Horizontal ->
-                                Maybe.withDefault { defaultOptions | orientation = Axis.Bottom }
+                                Maybe.withDefault
+                                    { defaultOptions
+                                        | orientation = Axis.Bottom
+                                        , tickFormat = Just identity
+                                    }
                                     config.bandAxisOptions
                 in
                 { bandAxisOptions = bandAxisOptions
@@ -249,6 +257,12 @@ renderBand data config =
                                 )
                             )
                         |> List.unzip
+                        |> (\( a, b ) ->
+                                if List.length b == 1 then
+                                    ( a, b )
+                                else
+                                    ( a, bandAxis outerAxisOptions appliedBandScale :: b )
+                           )
 
                 _ ->
                     ( [], [] )
@@ -284,8 +298,7 @@ renderBand data config =
                 )
             , class "series"
             ]
-            --[ bandAxis config.bandAxisOptions appliedBandScale ]
-            (bandAxis outerAxisOptions appliedBandScale :: bandAxisGroup)
+            bandAxisGroup
         , g
             [ transform
                 ("translate("
