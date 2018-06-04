@@ -74,8 +74,7 @@ type Point
 
 type alias DataStructure =
     { cssClass : Maybe String
-
-    --, group : Maybe String
+    , group : Maybe String
     , point : Point
     , tooltip : Maybe String
     }

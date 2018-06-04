@@ -238,7 +238,11 @@ renderBand data config =
 
         bandDomain =
             data
-                |> List.indexedMap (\idx _ -> toString idx)
+                --|> List.indexedMap (\idx _ -> toString idx)
+                |> List.indexedMap
+                    (\idx g ->
+                        g |> List.head |> Maybe.andThen .group |> Maybe.withDefault (toString idx)
+                    )
 
         appliedLinearScale =
             linearScale linearDomain verticalRange
@@ -330,7 +334,11 @@ getBandGroupScale config bandScaleGroup idx dataGroup =
             Scale.bandwidth bandScaleGroup
 
         initialPoint =
-            Scale.convert bandScaleGroup <| toString idx
+            dataGroup
+                |> List.head
+                |> Maybe.andThen .group
+                |> Maybe.withDefault (toString idx)
+                |> Scale.convert bandScaleGroup
 
         endPoint =
             initialPoint + bandWidth
