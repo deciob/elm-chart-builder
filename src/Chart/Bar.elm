@@ -5,8 +5,13 @@ import Chart.Types exposing (..)
 import Html exposing (Html)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Visualization.Axis as Axis exposing (defaultOptions)
+import Visualization.Axis as Axis
 import Visualization.Scale as Scale exposing (BandConfig, BandScale, ContinuousScale, defaultBandConfig)
+
+
+axisDefaultOptions : Axis.Options String
+axisDefaultOptions =
+    Axis.defaultOptions
 
 
 linearScale : LinearDomain -> Range -> ContinuousScale
@@ -34,6 +39,7 @@ bandAxis options scale =
 defaultConfig : InternalConfig
 defaultConfig =
     { bandAxisOptions = Axis.defaultOptions
+    , bandGroupAxisOptions = Axis.defaultOptions
     , bandScaleConfig = defaultBandConfig
     , height = 400
     , layout = Grouped
@@ -49,6 +55,7 @@ initConfig : Config
 initConfig =
     toConfig
         { bandAxisOptions = Nothing
+        , bandGroupAxisOptions = Nothing
         , bandScaleConfig = Nothing
         , height = Nothing
         , layout = Nothing
@@ -87,21 +94,40 @@ internalConfig data config =
                     axisDefaultOptions =
                         Axis.defaultOptions
 
-                    bandAxisOptions =
+                    groupAxisDefaultOptions =
+                        { axisDefaultOptions | ticks = Nothing, tickCount = 0 }
+
+                    _ =
+                        Debug.log "groupAxisDefaultOptions" bandGroupAxisOptions
+
+                    ( bandAxisOptions, bandGroupAxisOptions ) =
                         case orientation of
                             Vertical ->
-                                Maybe.withDefault { axisDefaultOptions | tickFormat = Just identity }
-                                    config.bandAxisOptions
+                                ( config.bandAxisOptions
+                                    |> Maybe.withDefault
+                                        { axisDefaultOptions | tickFormat = Just identity }
+                                , config.bandGroupAxisOptions
+                                    |> Maybe.withDefault
+                                        { groupAxisDefaultOptions | tickFormat = Just identity }
+                                )
 
                             Horizontal ->
-                                Maybe.withDefault
-                                    { defaultOptions
-                                        | orientation = Axis.Bottom
-                                        , tickFormat = Just identity
-                                    }
-                                    config.bandAxisOptions
+                                ( config.bandAxisOptions
+                                    |> Maybe.withDefault
+                                        { axisDefaultOptions
+                                            | orientation = Axis.Bottom
+                                            , tickFormat = Just identity
+                                        }
+                                , config.bandGroupAxisOptions
+                                    |> Maybe.withDefault
+                                        { groupAxisDefaultOptions
+                                            | orientation = Axis.Bottom
+                                            , tickFormat = Just identity
+                                        }
+                                )
                 in
                 { bandAxisOptions = bandAxisOptions
+                , bandGroupAxisOptions = bandGroupAxisOptions
                 , bandScaleConfig =
                     Maybe.withDefault defaultConfig.bandScaleConfig
                         config.bandScaleConfig
@@ -217,7 +243,7 @@ renderBandGroupAxis config bandScaleGroup idx dataGroup =
         appliedBandScale =
             getBandGroupScale config bandScaleGroup idx dataGroup
     in
-    bandAxis config.bandAxisOptions appliedBandScale
+    bandAxis config.bandGroupAxisOptions appliedBandScale
 
 
 renderBand : List (List DataStructure) -> InternalConfig -> Html msg
@@ -238,7 +264,6 @@ renderBand data config =
 
         bandDomain =
             data
-                --|> List.indexedMap (\idx _ -> toString idx)
                 |> List.indexedMap
                     (\idx g ->
                         g |> List.head |> Maybe.andThen .group |> Maybe.withDefault (toString idx)
@@ -265,7 +290,7 @@ renderBand data config =
                                 if List.length b == 1 then
                                     ( a, b )
                                 else
-                                    ( a, bandAxis outerAxisOptions appliedBandScale :: b )
+                                    ( a, bandAxis bandGroupAxisOptions appliedBandScale :: b )
                            )
 
                 _ ->
@@ -274,8 +299,8 @@ renderBand data config =
         bandAxisOptions =
             config.bandAxisOptions
 
-        outerAxisOptions =
-            { bandAxisOptions | tickSizeInner = 12 }
+        bandGroupAxisOptions =
+            config.bandGroupAxisOptions
     in
     svg
         [ width (toString (config.width + config.margin.left + config.margin.right) ++ "px")

@@ -19,6 +19,7 @@ module Chart.Types
         , fromPointTime
         , getDataPointStructure
         , setBandAxisOptions
+        , setBandGroupAxisOptions
         , setBandScaleConfig
         , setHeight
         , setLinearAxisOptions
@@ -179,6 +180,7 @@ type alias Margin =
 
 type alias ConfigStructure =
     { bandAxisOptions : Maybe (Visualization.Axis.Options String)
+    , bandGroupAxisOptions : Maybe (Visualization.Axis.Options String)
     , bandScaleConfig : Maybe BandConfig
     , height : Maybe Float
     , layout : Maybe Layout
@@ -192,6 +194,7 @@ type alias ConfigStructure =
 
 type alias InternalConfig =
     { bandAxisOptions : Visualization.Axis.Options String
+    , bandGroupAxisOptions : Visualization.Axis.Options String
     , bandScaleConfig : BandConfig
     , height : Float
     , layout : Layout
@@ -287,3 +290,12 @@ setBandAxisOptions options config =
             fromConfig config
     in
     toConfig { internalConfig | bandAxisOptions = Just options }
+
+
+setBandGroupAxisOptions : Visualization.Axis.Options String -> Config -> Config
+setBandGroupAxisOptions options config =
+    let
+        internalConfig =
+            fromConfig config
+    in
+    toConfig { internalConfig | bandGroupAxisOptions = Just options }
