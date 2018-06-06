@@ -45,7 +45,7 @@ defaultConfig =
     , layout = Grouped
     , linearDomain = Nothing
     , linearAxisOptions = Axis.defaultOptions
-    , orientation = Horizontal
+    , orientation = Vertical
     , margin = { top = 5, right = 5, bottom = 5, left = 5 }
     , width = 600
     }
@@ -95,34 +95,35 @@ internalConfig data config =
                         Axis.defaultOptions
 
                     groupAxisDefaultOptions =
-                        { axisDefaultOptions | ticks = Nothing, tickCount = 0 }
-
-                    _ =
-                        Debug.log "groupAxisDefaultOptions" bandGroupAxisOptions
+                        { axisDefaultOptions | ticks = Just [], tickCount = 0 }
 
                     ( bandAxisOptions, bandGroupAxisOptions ) =
                         case orientation of
                             Vertical ->
                                 ( config.bandAxisOptions
                                     |> Maybe.withDefault
-                                        { axisDefaultOptions | tickFormat = Just identity }
+                                        { axisDefaultOptions
+                                            | tickFormat = Just identity
+                                            , orientation = Axis.Bottom
+                                        }
                                 , config.bandGroupAxisOptions
                                     |> Maybe.withDefault
-                                        { groupAxisDefaultOptions | tickFormat = Just identity }
+                                        { groupAxisDefaultOptions
+                                            | tickFormat = Just identity
+                                            , orientation = Axis.Bottom
+                                        }
                                 )
 
                             Horizontal ->
                                 ( config.bandAxisOptions
                                     |> Maybe.withDefault
                                         { axisDefaultOptions
-                                            | orientation = Axis.Bottom
-                                            , tickFormat = Just identity
+                                            | tickFormat = Just identity
                                         }
                                 , config.bandGroupAxisOptions
                                     |> Maybe.withDefault
                                         { groupAxisDefaultOptions
-                                            | orientation = Axis.Bottom
-                                            , tickFormat = Just identity
+                                            | tickFormat = Just identity
                                         }
                                 )
                 in
@@ -243,7 +244,7 @@ renderBandGroupAxis config bandScaleGroup idx dataGroup =
         appliedBandScale =
             getBandGroupScale config bandScaleGroup idx dataGroup
     in
-    bandAxis config.bandGroupAxisOptions appliedBandScale
+    bandAxis config.bandAxisOptions appliedBandScale
 
 
 renderBand : List (List DataStructure) -> InternalConfig -> Html msg
@@ -275,6 +276,13 @@ renderBand data config =
         appliedBandScale =
             bandScale config.bandScaleConfig bandDomain horizontalRange
 
+        bandAxisOptions =
+            config.bandAxisOptions
+
+        bandGroupAxisOptions =
+            config.bandGroupAxisOptions
+                |> Debug.log "bandGroupAxisOptions"
+
         ( d, bandAxisGroup ) =
             case config.layout of
                 Grouped ->
@@ -295,12 +303,6 @@ renderBand data config =
 
                 _ ->
                     ( [], [] )
-
-        bandAxisOptions =
-            config.bandAxisOptions
-
-        bandGroupAxisOptions =
-            config.bandGroupAxisOptions
     in
     svg
         [ width (toString (config.width + config.margin.left + config.margin.right) ++ "px")
