@@ -111,11 +111,12 @@ main =
                 ]
             ]
             [ defaultConfig
-                |> setBandGroupAxisOptions
+                |> setBandAxisOptions
                     { defaultOptions
                         | orientation = Axis.Bottom
                         , tickFormat = Just identity
                     }
-                |> Bar.render data3
+                |> setBandGroupAxisOptions { defaultOptions | ticks = Just [], tickCount = 0 }
+                |> Bar.render data2
             ]
         ]

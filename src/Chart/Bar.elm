@@ -9,11 +9,6 @@ import Visualization.Axis as Axis
 import Visualization.Scale as Scale exposing (BandConfig, BandScale, ContinuousScale, defaultBandConfig)
 
 
-axisDefaultOptions : Axis.Options String
-axisDefaultOptions =
-    Axis.defaultOptions
-
-
 linearScale : LinearDomain -> Range -> ContinuousScale
 linearScale domain range =
     Scale.linear domain range
@@ -24,16 +19,6 @@ bandScale bandConfig domain range =
     Scale.band bandConfig
         domain
         range
-
-
-linearAxis : Axis.Options Float -> ContinuousScale -> Svg msg
-linearAxis options scale =
-    Axis.axis options scale
-
-
-bandAxis : Axis.Options String -> BandScale String -> Svg msg
-bandAxis options scale =
-    Axis.axis options (Scale.toRenderable scale)
 
 
 defaultConfig : InternalConfig
@@ -91,13 +76,27 @@ internalConfig data config =
                     orientation =
                         Maybe.withDefault defaultConfig.orientation config.orientation
 
-                    axisDefaultOptions =
-                        Axis.defaultOptions
+                    firstDataPoint =
+                        data |> List.head |> Maybe.andThen List.head
 
-                    groupAxisDefaultOptions =
-                        { axisDefaultOptions | ticks = Just [], tickCount = 0 }
+                    ( axisDefaultOptions, groupAxisDefaultOptions ) =
+                        -- TODO: make test
+                        let
+                            default =
+                                Axis.defaultOptions
+                        in
+                        case firstDataPoint |> Maybe.map .group of
+                            Just group ->
+                                if List.length data > 1 then
+                                    ( { default | ticks = Just [], tickCount = 0 }, default )
+                                else
+                                    ( default, { default | ticks = Just [], tickCount = 0 } )
+
+                            Nothing ->
+                                ( default, { default | ticks = Just [], tickCount = 0 } )
 
                     ( bandAxisOptions, bandGroupAxisOptions ) =
+                        -- TODO: make test
                         case orientation of
                             Vertical ->
                                 ( config.bandAxisOptions
@@ -233,20 +232,6 @@ renderBandGroup config bandScaleGroup appliedLinearScale idx dataGroup =
         |> gBlock
 
 
-renderBandGroupAxis :
-    InternalConfig
-    -> BandScale String
-    -> Int
-    -> List DataStructure
-    -> Svg msg
-renderBandGroupAxis config bandScaleGroup idx dataGroup =
-    let
-        appliedBandScale =
-            getBandGroupScale config bandScaleGroup idx dataGroup
-    in
-    bandAxis config.bandAxisOptions appliedBandScale
-
-
 renderBand : List (List DataStructure) -> InternalConfig -> Html msg
 renderBand data config =
     let
@@ -281,7 +266,6 @@ renderBand data config =
 
         bandGroupAxisOptions =
             config.bandGroupAxisOptions
-                |> Debug.log "bandGroupAxisOptions"
 
         ( d, bandAxisGroup ) =
             case config.layout of
@@ -346,6 +330,39 @@ renderBand data config =
 
 
 
+-- AXIS
+
+
+axisDefaultOptions : Axis.Options String
+axisDefaultOptions =
+    Axis.defaultOptions
+
+
+linearAxis : Axis.Options Float -> ContinuousScale -> Svg msg
+linearAxis options scale =
+    Axis.axis options scale
+
+
+bandAxis : Axis.Options String -> BandScale String -> Svg msg
+bandAxis options scale =
+    Axis.axis options (Scale.toRenderable scale)
+
+
+renderBandGroupAxis :
+    InternalConfig
+    -> BandScale String
+    -> Int
+    -> List DataStructure
+    -> Svg msg
+renderBandGroupAxis config bandScaleGroup idx dataGroup =
+    let
+        appliedBandScale =
+            getBandGroupScale config bandScaleGroup idx dataGroup
+    in
+    bandAxis config.bandAxisOptions appliedBandScale
+
+
+
 -- HELPERS
 
 
@@ -365,6 +382,7 @@ getBandGroupScale config bandScaleGroup idx dataGroup =
                 |> List.head
                 |> Maybe.andThen .group
                 |> Maybe.withDefault (toString idx)
+                |> Debug.log "group"
                 |> Scale.convert bandScaleGroup
 
         endPoint =
