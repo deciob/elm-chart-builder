@@ -17,19 +17,23 @@ suite =
                     [ [ { cssClass = Nothing
                         , point = toPointBand ( "a", 0 )
                         , tooltip = Nothing
+                        , group = Nothing
                         }
                       , { cssClass = Nothing
                         , point = toPointBand ( "b", 12 )
                         , tooltip = Nothing
+                        , group = Nothing
                         }
                       ]
                     , [ { cssClass = Nothing
                         , point = toPointBand ( "a", -10 )
                         , tooltip = Nothing
+                        , group = Nothing
                         }
                       , { cssClass = Nothing
                         , point = toPointBand ( "b", 10 )
                         , tooltip = Nothing
+                        , group = Nothing
                         }
                       ]
                     ]

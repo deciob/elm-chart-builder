@@ -1,6 +1,7 @@
 module Chart.Types
     exposing
-        ( BandDomain
+        ( AxisBandConfig
+        , BandDomain
         , Config
         , Data
         , DataStructure
@@ -13,6 +14,7 @@ module Chart.Types
         , Rectangle
         , Scale(..)
         , TimeDomain
+        , fromAxisBandConfig
         , fromConfig
         , fromPointBand
         , fromPointLinear
@@ -25,6 +27,7 @@ module Chart.Types
         , setLinearAxisOptions
         , setMargin
         , setWidth
+        , toAxisBandConfig
         , toConfig
         , toPointBand
         , toPointLinear
@@ -192,20 +195,6 @@ type alias ConfigStructure =
     }
 
 
-type alias InternalConfig =
-    { bandAxisOptions : Visualization.Axis.Options String
-    , bandGroupAxisOptions : Visualization.Axis.Options String
-    , bandScaleConfig : BandConfig
-    , height : Float
-    , layout : Layout
-    , linearDomain : Maybe LinearDomain
-    , linearAxisOptions : Visualization.Axis.Options Float
-    , orientation : Orientation
-    , margin : Margin
-    , width : Float
-    }
-
-
 type Config
     = Config ConfigStructure
 
@@ -218,6 +207,42 @@ toConfig config =
 fromConfig : Config -> ConfigStructure
 fromConfig (Config config) =
     config
+
+
+type alias AxisBandConfigStructure a =
+    { a
+        | orientation : Maybe Orientation
+        , bandAxisOptions : Maybe (Visualization.Axis.Options String)
+        , bandGroupAxisOptions : Maybe (Visualization.Axis.Options String)
+    }
+
+
+type AxisBandConfig a
+    = AxisBandConfig (AxisBandConfigStructure a)
+
+
+toAxisBandConfig : AxisBandConfigStructure a -> AxisBandConfig a
+toAxisBandConfig config =
+    AxisBandConfig config
+
+
+fromAxisBandConfig : AxisBandConfig a -> AxisBandConfigStructure a
+fromAxisBandConfig (AxisBandConfig config) =
+    config
+
+
+type alias InternalConfig =
+    { bandAxisOptions : Visualization.Axis.Options String
+    , bandGroupAxisOptions : Visualization.Axis.Options String
+    , bandScaleConfig : BandConfig
+    , height : Float
+    , layout : Layout
+    , linearDomain : Maybe LinearDomain
+    , linearAxisOptions : Visualization.Axis.Options Float
+    , orientation : Orientation
+    , margin : Margin
+    , width : Float
+    }
 
 
 setBandScaleConfig : BandConfig -> Config -> Config

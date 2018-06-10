@@ -79,52 +79,8 @@ internalConfig data config =
                     firstDataPoint =
                         data |> List.head |> Maybe.andThen List.head
 
-                    ( axisDefaultOptions, groupAxisDefaultOptions ) =
-                        -- TODO: make test
-                        let
-                            default =
-                                Axis.defaultOptions
-                        in
-                        case firstDataPoint |> Maybe.map .group of
-                            Just group ->
-                                if List.length data > 1 then
-                                    ( { default | ticks = Just [], tickCount = 0 }, default )
-                                else
-                                    ( default, { default | ticks = Just [], tickCount = 0 } )
-
-                            Nothing ->
-                                ( default, { default | ticks = Just [], tickCount = 0 } )
-
                     ( bandAxisOptions, bandGroupAxisOptions ) =
-                        -- TODO: make test
-                        case orientation of
-                            Vertical ->
-                                ( config.bandAxisOptions
-                                    |> Maybe.withDefault
-                                        { axisDefaultOptions
-                                            | tickFormat = Just identity
-                                            , orientation = Axis.Bottom
-                                        }
-                                , config.bandGroupAxisOptions
-                                    |> Maybe.withDefault
-                                        { groupAxisDefaultOptions
-                                            | tickFormat = Just identity
-                                            , orientation = Axis.Bottom
-                                        }
-                                )
-
-                            Horizontal ->
-                                ( config.bandAxisOptions
-                                    |> Maybe.withDefault
-                                        { axisDefaultOptions
-                                            | tickFormat = Just identity
-                                        }
-                                , config.bandGroupAxisOptions
-                                    |> Maybe.withDefault
-                                        { groupAxisDefaultOptions
-                                            | tickFormat = Just identity
-                                        }
-                                )
+                        axisBandDefaultOptions (toAxisBandConfig config) data
                 in
                 { bandAxisOptions = bandAxisOptions
                 , bandGroupAxisOptions = bandGroupAxisOptions
@@ -333,9 +289,48 @@ renderBand data config =
 -- AXIS
 
 
-axisDefaultOptions : Axis.Options String
-axisDefaultOptions =
-    Axis.defaultOptions
+axisBandDefaultOptions : AxisBandConfig a -> Data -> ( Axis.Options String, Axis.Options String )
+axisBandDefaultOptions config data =
+    let
+        config_ =
+            fromAxisBandConfig config
+
+        orientation =
+            Maybe.withDefault Vertical config_.orientation
+
+        default =
+            Axis.defaultOptions
+                |> (\d ->
+                        { d
+                            | tickFormat = Just identity
+                            , orientation =
+                                case orientation of
+                                    Vertical ->
+                                        Axis.Bottom
+
+                                    Horizontal ->
+                                        Axis.Left
+                        }
+                   )
+    in
+    case data |> List.head |> Maybe.andThen List.head |> Maybe.map .group of
+        Just group ->
+            if List.length data > 1 then
+                ( Maybe.withDefault (default |> axisHideTicks) config_.bandAxisOptions
+                , Maybe.withDefault default config_.bandGroupAxisOptions
+                )
+            else
+                ( Maybe.withDefault default config_.bandAxisOptions
+                , Maybe.withDefault (default |> axisHideTicks) config_.bandGroupAxisOptions
+                )
+
+        Nothing ->
+            ( default, default )
+
+
+axisHideTicks : Axis.Options String -> Axis.Options String
+axisHideTicks options =
+    { options | ticks = Just [], tickCount = 0 }
 
 
 linearAxis : Axis.Options Float -> ContinuousScale -> Svg msg
@@ -382,7 +377,6 @@ getBandGroupScale config bandScaleGroup idx dataGroup =
                 |> List.head
                 |> Maybe.andThen .group
                 |> Maybe.withDefault (toString idx)
-                |> Debug.log "group"
                 |> Scale.convert bandScaleGroup
 
         endPoint =
