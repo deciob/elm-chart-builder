@@ -9,8 +9,8 @@ flatList list =
 
 
 getLinearDomain :
-    List (List DataStructure)
-    -> (DataStructure -> Float)
+    List (List Datum)
+    -> (Datum -> Float)
     -> Maybe LinearDomain
     -> LinearDomain
 getLinearDomain data transformer linearDomain =

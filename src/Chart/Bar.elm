@@ -21,7 +21,7 @@ bandScale bandConfig domain range =
         range
 
 
-defaultConfig : InternalConfig
+defaultConfig : InternalConfigStructure
 defaultConfig =
     { bandAxisOptions = Axis.defaultOptions
     , bandGroupAxisOptions = Axis.defaultOptions
@@ -52,7 +52,7 @@ initConfig =
         }
 
 
-internalConfig : Data -> Config -> InternalConfig
+internalConfig : Data -> Config -> InternalConfigStructure
 internalConfig data config =
     fromConfig config
         |> (\config ->
@@ -101,7 +101,7 @@ internalConfig data config =
 render : Data -> Config -> Html msg
 render data config_ =
     let
-        config : InternalConfig
+        config : InternalConfigStructure
         config =
             internalConfig data config_
 
@@ -109,16 +109,14 @@ render data config_ =
             getDataPointStructure data
     in
     case pointStructure of
-        Nothing ->
+        PointBand point ->
+            renderBand data config
+
+        NoPoint ->
             Html.text "no point struncture"
 
-        Just point ->
-            case point of
-                PointBand point ->
-                    renderBand data config
-
-                _ ->
-                    Html.text ""
+        _ ->
+            Html.text "not yet implemented"
 
 
 column : Float -> String -> Rectangle -> Svg msg
@@ -136,10 +134,10 @@ column value cssClass { x, y, width, height } =
 
 
 bandColumn :
-    InternalConfig
+    InternalConfigStructure
     -> BandScale String
     -> ContinuousScale
-    -> DataStructure
+    -> Datum
     -> Svg msg
 bandColumn config bandScale linearScale dataPoint =
     let
@@ -165,11 +163,11 @@ gBlock children =
 
 
 renderBandGroup :
-    InternalConfig
+    InternalConfigStructure
     -> BandScale String
     -> ContinuousScale
     -> Int
-    -> List DataStructure
+    -> List Datum
     -> Svg msg
 renderBandGroup config bandScaleGroup appliedLinearScale idx dataGroup =
     let
@@ -188,7 +186,7 @@ renderBandGroup config bandScaleGroup appliedLinearScale idx dataGroup =
         |> gBlock
 
 
-renderBand : List (List DataStructure) -> InternalConfig -> Html msg
+renderBand : List (List Datum) -> InternalConfigStructure -> Html msg
 renderBand data config =
     let
         horizontalRange =
@@ -200,11 +198,13 @@ renderBand data config =
         linearDomain =
             getLinearDomain
                 data
-                (.point >> fromPointBand >> Maybe.withDefault ( "", 0 ) >> Tuple.second)
+                (.point >> fromPointBand >> Maybe.map Tuple.second >> Maybe.withDefault 0)
                 config.linearDomain
+                -- TODO: this step should be removed, all domains should be handled
                 |> (\d -> ( 0, Tuple.second d ))
 
         bandDomain =
+            -- TODO: extrapolate to helper function and test
             data
                 |> List.indexedMap
                     (\idx g ->
@@ -344,10 +344,10 @@ bandAxis options scale =
 
 
 renderBandGroupAxis :
-    InternalConfig
+    InternalConfigStructure
     -> BandScale String
     -> Int
-    -> List DataStructure
+    -> List Datum
     -> Svg msg
 renderBandGroupAxis config bandScaleGroup idx dataGroup =
     let
@@ -362,10 +362,10 @@ renderBandGroupAxis config bandScaleGroup idx dataGroup =
 
 
 getBandGroupScale :
-    InternalConfig
+    InternalConfigStructure
     -> BandScale String
     -> Int
-    -> List DataStructure
+    -> List Datum
     -> BandScale String
 getBandGroupScale config bandScaleGroup idx dataGroup =
     let

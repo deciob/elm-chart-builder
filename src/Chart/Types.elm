@@ -4,15 +4,15 @@ module Chart.Types
         , BandDomain
         , Config
         , Data
-        , DataStructure
-        , InternalConfig
+        , Datum
+        , InternalConfigStructure
         , Layout(..)
         , LinearDomain
         , Orientation(..)
         , Point(..)
         , Range
         , Rectangle
-        , Scale(..)
+          --, Scale(..)
         , TimeDomain
         , fromAxisBandConfig
         , fromConfig
@@ -46,12 +46,6 @@ import Visualization.Scale as Scale
         )
 
 
-type Scale
-    = Band
-    | Linear
-    | Time
-
-
 type Orientation
     = Vertical
     | Horizontal
@@ -62,21 +56,14 @@ type Layout
     | Grouped
 
 
-getDataPointStructure : List (List DataStructure) -> Maybe Point
-getDataPointStructure data =
-    data
-        |> List.head
-        |> Maybe.andThen List.head
-        |> Maybe.map .point
-
-
 type Point
     = PointLinear ( Float, Float )
     | PointBand ( String, Float )
     | PointTime ( Date, Float )
+    | NoPoint
 
 
-type alias DataStructure =
+type alias Datum =
     { cssClass : Maybe String
     , group : Maybe String
     , point : Point
@@ -85,7 +72,7 @@ type alias DataStructure =
 
 
 type alias Data =
-    List (List DataStructure)
+    List (List Datum)
 
 
 type alias LinearDomain =
@@ -102,6 +89,102 @@ type alias TimeDomain =
 
 type alias Range =
     ( Float, Float )
+
+
+type alias Rectangle =
+    { x : Float, y : Float, width : Float, height : Float }
+
+
+type BandScale
+    = BandScale (BandScale String)
+
+
+type LinearScale
+    = LinearScale ContinuousScale
+
+
+type TimeScale
+    = TimeScale ContinuousTimeScale
+
+
+type alias Height =
+    Maybe Float
+
+
+type alias Width =
+    Maybe Float
+
+
+type alias Margin =
+    { top : Float
+    , right : Float
+    , bottom : Float
+    , left : Float
+    }
+
+
+type alias InternalConfigStructure =
+    { bandAxisOptions : Visualization.Axis.Options String
+    , bandGroupAxisOptions : Visualization.Axis.Options String
+    , bandScaleConfig : BandConfig
+    , height : Float
+    , layout : Layout
+    , linearDomain : Maybe LinearDomain
+    , linearAxisOptions : Visualization.Axis.Options Float
+    , orientation : Orientation
+    , margin : Margin
+    , width : Float
+    }
+
+
+type alias ConfigStructure =
+    { bandAxisOptions : Maybe (Visualization.Axis.Options String)
+    , bandGroupAxisOptions : Maybe (Visualization.Axis.Options String)
+    , bandScaleConfig : Maybe BandConfig
+    , height : Maybe Float
+    , layout : Maybe Layout
+    , linearDomain : Maybe LinearDomain
+    , linearAxisOptions : Maybe (Visualization.Axis.Options Float)
+    , orientation : Maybe Orientation
+    , margin : Maybe Margin
+    , width : Maybe Float
+    }
+
+
+type Config
+    = Config ConfigStructure
+
+
+type alias AxisBandConfigStructure a =
+    { a
+        | orientation : Maybe Orientation
+        , bandAxisOptions : Maybe (Visualization.Axis.Options String)
+        , bandGroupAxisOptions : Maybe (Visualization.Axis.Options String)
+    }
+
+
+type AxisBandConfig a
+    = AxisBandConfig (AxisBandConfigStructure a)
+
+
+toConfig : ConfigStructure -> Config
+toConfig config =
+    Config config
+
+
+fromConfig : Config -> ConfigStructure
+fromConfig (Config config) =
+    config
+
+
+toAxisBandConfig : AxisBandConfigStructure a -> AxisBandConfig a
+toAxisBandConfig config =
+    AxisBandConfig config
+
+
+fromAxisBandConfig : AxisBandConfig a -> AxisBandConfigStructure a
+fromAxisBandConfig (AxisBandConfig config) =
+    config
 
 
 toPointTime : ( Date, Float ) -> Point
@@ -149,100 +232,13 @@ fromPointLinear point =
             Nothing
 
 
-type alias Rectangle =
-    { x : Float, y : Float, width : Float, height : Float }
-
-
-type BandScale
-    = BandScale (BandScale String)
-
-
-type LinearScale
-    = LinearScale ContinuousScale
-
-
-type TimeScale
-    = TimeScale ContinuousTimeScale
-
-
-type alias Height =
-    Maybe Float
-
-
-type alias Width =
-    Maybe Float
-
-
-type alias Margin =
-    { top : Float
-    , right : Float
-    , bottom : Float
-    , left : Float
-    }
-
-
-type alias ConfigStructure =
-    { bandAxisOptions : Maybe (Visualization.Axis.Options String)
-    , bandGroupAxisOptions : Maybe (Visualization.Axis.Options String)
-    , bandScaleConfig : Maybe BandConfig
-    , height : Maybe Float
-    , layout : Maybe Layout
-    , linearDomain : Maybe LinearDomain
-    , linearAxisOptions : Maybe (Visualization.Axis.Options Float)
-    , orientation : Maybe Orientation
-    , margin : Maybe Margin
-    , width : Maybe Float
-    }
-
-
-type Config
-    = Config ConfigStructure
-
-
-toConfig : ConfigStructure -> Config
-toConfig config =
-    Config config
-
-
-fromConfig : Config -> ConfigStructure
-fromConfig (Config config) =
-    config
-
-
-type alias AxisBandConfigStructure a =
-    { a
-        | orientation : Maybe Orientation
-        , bandAxisOptions : Maybe (Visualization.Axis.Options String)
-        , bandGroupAxisOptions : Maybe (Visualization.Axis.Options String)
-    }
-
-
-type AxisBandConfig a
-    = AxisBandConfig (AxisBandConfigStructure a)
-
-
-toAxisBandConfig : AxisBandConfigStructure a -> AxisBandConfig a
-toAxisBandConfig config =
-    AxisBandConfig config
-
-
-fromAxisBandConfig : AxisBandConfig a -> AxisBandConfigStructure a
-fromAxisBandConfig (AxisBandConfig config) =
-    config
-
-
-type alias InternalConfig =
-    { bandAxisOptions : Visualization.Axis.Options String
-    , bandGroupAxisOptions : Visualization.Axis.Options String
-    , bandScaleConfig : BandConfig
-    , height : Float
-    , layout : Layout
-    , linearDomain : Maybe LinearDomain
-    , linearAxisOptions : Visualization.Axis.Options Float
-    , orientation : Orientation
-    , margin : Margin
-    , width : Float
-    }
+getDataPointStructure : List (List Datum) -> Point
+getDataPointStructure data =
+    data
+        |> List.head
+        |> Maybe.andThen List.head
+        |> Maybe.map .point
+        |> Maybe.withDefault NoPoint
 
 
 setBandScaleConfig : BandConfig -> Config -> Config
