@@ -196,20 +196,12 @@ renderBand data config =
             ( config.height, 0 )
 
         linearDomain =
-            getLinearDomain
-                data
-                (.point >> fromPointBand >> Maybe.map Tuple.second >> Maybe.withDefault 0)
-                config.linearDomain
+            getLinearDomain data linearDomainTransformer config.linearDomain
                 -- TODO: this step should be removed, all domains should be handled
                 |> (\d -> ( 0, Tuple.second d ))
 
         bandDomain =
-            -- TODO: extrapolate to helper function and test
-            data
-                |> List.indexedMap
-                    (\idx g ->
-                        g |> List.head |> Maybe.andThen .group |> Maybe.withDefault (toString idx)
-                    )
+            getBandDomain data
 
         appliedLinearScale =
             linearScale linearDomain verticalRange

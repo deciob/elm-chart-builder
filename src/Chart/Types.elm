@@ -12,7 +12,6 @@ module Chart.Types
         , Point(..)
         , Range
         , Rectangle
-          --, Scale(..)
         , TimeDomain
         , fromAxisBandConfig
         , fromConfig
@@ -20,6 +19,7 @@ module Chart.Types
         , fromPointLinear
         , fromPointTime
         , getDataPointStructure
+        , linearDomainTransformer
         , setBandAxisOptions
         , setBandGroupAxisOptions
         , setBandScaleConfig
@@ -320,3 +320,8 @@ setBandGroupAxisOptions options config =
             fromConfig config
     in
     toConfig { internalConfig | bandGroupAxisOptions = Just options }
+
+
+linearDomainTransformer : Datum -> Float
+linearDomainTransformer =
+    .point >> fromPointBand >> Maybe.map Tuple.second >> Maybe.withDefault 0

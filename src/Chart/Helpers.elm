@@ -9,7 +9,7 @@ flatList list =
 
 
 getLinearDomain :
-    List (List Datum)
+    Data
     -> (Datum -> Float)
     -> Maybe LinearDomain
     -> LinearDomain
@@ -32,3 +32,12 @@ getLinearDomain data transformer linearDomain =
 
         Just linearDomain ->
             linearDomain
+
+
+getBandDomain : Data -> BandDomain
+getBandDomain data =
+    data
+        |> List.indexedMap
+            (\idx g ->
+                g |> List.head |> Maybe.andThen .group |> Maybe.withDefault (toString idx)
+            )
